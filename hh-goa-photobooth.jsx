@@ -3,7 +3,7 @@ import {
   Camera, Upload, Shuffle, Download, X as XIcon, ArrowRight, ArrowLeft,
   RefreshCw, Sparkles, Copy, Check, Sliders, Palette, Image as ImageIcon,
   ShieldCheck, Zap, User, MapPin, Briefcase, Volume2, VolumeX, Move,
-  Tag, Layers, Smartphone, Monitor
+  Tag, Smartphone, Monitor, Share2
 } from "lucide-react";
 
 const FONT_IMPORT = `@import url('https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Caveat:wght@600;700&family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');`;
@@ -54,9 +54,7 @@ function playSound(type = 'click', soundEnabled = true) {
       osc.start();
       osc.stop(ctx.currentTime + 0.08);
     }
-  } catch (e) {
-    // AudioContext blocked or unsupported
-  }
+  } catch (e) {}
 }
 
 const FILTERS = [
@@ -76,12 +74,12 @@ const TITLES = [
 ];
 
 const STICKER_CATALOG = [
-  { id: "ai_pioneer", text: "AI PIONEER", icon: "🚀", bg: "#7000FF", color: "#FFFFFF", relX: 0.72, relY: 0.28 },
-  { id: "goa_local", text: "GOA LOCAL", icon: "🌴", bg: "#00B894", color: "#FFFFFF", relX: 0.82, relY: 0.52 },
-  { id: "built_24h", text: "BUILT IN 24H", icon: "⚡", bg: "#FF7675", color: "#FFFFFF", relX: 0.75, relY: 0.75 },
+  { id: "frame_in_goa", text: "#FrameInGoa", icon: "📸", bg: "#FF4980", color: "#FFFFFF", relX: 0.76, relY: 0.22 },
+  { id: "ai_pioneer", text: "AI PIONEER", icon: "🚀", bg: "#7000FF", color: "#FFFFFF", relX: 0.72, relY: 0.42 },
+  { id: "goa_local", text: "GOA LOCAL", icon: "🌴", bg: "#00B894", color: "#FFFFFF", relX: 0.80, relY: 0.62 },
+  { id: "built_24h", text: "BUILT IN 24H", icon: "⚡", bg: "#FF7675", color: "#FFFFFF", relX: 0.75, relY: 0.80 },
   { id: "coffee_fueled", text: "COFFEE FUELED", icon: "☕", bg: "#6C5CE7", color: "#FFFFFF", relX: 0.18, relY: 0.78 },
   { id: "agentic", text: "AGENTIC WIZARD", icon: "🤖", bg: "#FD79A8", color: "#FFFFFF", relX: 0.14, relY: 0.30 },
-  { id: "web3", text: "WEB3 DIAMOND", icon: "💎", bg: "#0984E3", color: "#FFFFFF", relX: 0.45, relY: 0.82 },
 ];
 
 const STACK_PRESETS = [
@@ -94,7 +92,7 @@ const LOCATION_PRESETS = [
 ];
 
 const TEMPLATES = [
-  { id: "goapass", name: "GOA VIP PASS", blurb: "Vibrant tropical badge with holographic stamps & gold stars.", icon: "🌴" },
+  { id: "goapass", name: "GOA VIP PASS", blurb: "Vibrant tropical badge with holographic stamps & #FrameInGoa star.", icon: "🌴" },
   { id: "license", name: "CREATIVE LICENSE", blurb: "Vintage paper texture, paperclip polaroid & wax seal.", icon: "🪪" },
   { id: "digital", name: "CYBER TERMINAL", blurb: "Matrix neon grid, dark mono aesthetic & active status line.", icon: "⚡" },
   { id: "sunset", name: "SUNSET CLUB", blurb: "Luxurious gradient card with gold foil frame & builder seal.", icon: "🌅" },
@@ -114,36 +112,43 @@ function randomId() {
   return "H26-" + Math.random().toString(36).slice(2, 6).toUpperCase();
 }
 
+// Instant smart photo cover renderer (handles portrait, landscape, off-center aspect ratios)
 function drawImageCover(ctx, img, x, y, w, h, zoom = 1, offsetX = 0, offsetY = 0, cutoutMode = false) {
   if (!img) return;
-  const ir = img.width / img.height;
+  const imgW = img.naturalWidth || img.width;
+  const imgH = img.naturalHeight || img.height;
+  if (!imgW || !imgH) return;
+
+  const ir = imgW / imgH;
   const r = w / h;
   let sx, sy, sw, sh;
+
   if (ir > r) {
-    sh = img.height / zoom;
+    sh = imgH / zoom;
     sw = sh * r;
-    sx = (img.width - sw) / 2 + offsetX * (img.width - sw) / 2;
-    sy = (img.height - sh) / 2 + offsetY * (img.height - sh) / 2;
+    sx = (imgW - sw) / 2 + (offsetX * (imgW - sw)) / 2;
+    sy = (imgH - sh) / 2 + (offsetY * (imgH - sh)) / 2;
   } else {
-    sw = img.width / zoom;
+    sw = imgW / zoom;
     sh = sw / r;
-    sx = (img.width - sw) / 2 + offsetX * (img.width - sw) / 2;
-    sy = (img.height - sh) / 2 + offsetY * (img.height - sh) / 2;
+    sx = (imgW - sw) / 2 + (offsetX * (imgW - sw)) / 2;
+    sy = (imgH - sh) / 2 + (offsetY * (imgH - sh)) / 2;
   }
 
+  sx = Math.max(0, Math.min(imgW - sw, sx));
+  sy = Math.max(0, Math.min(imgH - sh, sy));
+
   if (cutoutMode) {
-    // Cutout vignette portrait framing effect
     ctx.save();
     ctx.beginPath();
     ctx.ellipse(x + w / 2, y + h / 2, w / 2 - 8, h / 2 - 8, 0, 0, Math.PI * 2);
     ctx.clip();
   }
 
-  ctx.drawImage(img, Math.max(0, sx), Math.max(0, sy), Math.min(img.width, sw), Math.min(img.height, sh), x, y, w, h);
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 
   if (cutoutMode) {
-    // Inner ring glow for portrait cutout
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
     ctx.lineWidth = 4;
     ctx.stroke();
     ctx.restore();
@@ -198,12 +203,11 @@ function drawStickers(ctx, cx, cy, cw, ch, stickers = []) {
     ctx.translate(sx, sy);
     ctx.rotate(st.rot || ((idx % 2 === 0 ? 1 : -1) * 0.08));
 
-    // Sticker shadow
     ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
     ctx.shadowBlur = 12;
     ctx.shadowOffsetY = 4;
 
-    drawRoundedRect(ctx, -70, -20, 140, 40, 20);
+    drawRoundedRect(ctx, -75, -20, 150, 40, 20);
     ctx.fillStyle = st.bg;
     ctx.fill();
 
@@ -238,11 +242,10 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   ctx.fillText(line, x, cy);
 }
 
-// Renderers
+// Template Renderers with #FrameInGoa On-Brand Tags
 function renderGoaPass(ctx, img, filterCss, details, idCode, stickers = []) {
   ctx.clearRect(0, 0, CARD_W, CARD_H);
   
-  // Background gradient
   const grad = ctx.createLinearGradient(0, 0, CARD_W, CARD_H);
   grad.addColorStop(0, "#082a20");
   grad.addColorStop(0.5, "#124e3b");
@@ -250,18 +253,15 @@ function renderGoaPass(ctx, img, filterCss, details, idCode, stickers = []) {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, CARD_W, CARD_H);
 
-  // Mesh lines
   ctx.strokeStyle = "rgba(127, 216, 196, 0.06)";
   ctx.lineWidth = 1;
   for (let i = 0; i < CARD_W; i += 30) {
     ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + 200, CARD_H); ctx.stroke();
   }
 
-  // Stars bg
   const starSeeds = [[40,40],[960,50],[70,580],[930,600],[500,20],[30,300],[970,320]];
   starSeeds.forEach(([sx, sy], i) => drawStar(ctx, sx, sy, 14, "rgba(255, 143, 177, 0.6)", i * 0.4));
 
-  // Outer Card container
   const cx = 40, cy = 50, cw = CARD_W - 80, ch = CARD_H - 100;
   ctx.save();
   drawRoundedRect(ctx, cx + 8, cy + 12, cw, ch, 32);
@@ -287,9 +287,9 @@ function renderGoaPass(ctx, img, filterCss, details, idCode, stickers = []) {
   ctx.restore();
 
   ctx.fillStyle = "#0B261E";
-  ctx.font = "800 32px 'Archivo Black', sans-serif";
+  ctx.font = "800 30px 'Archivo Black', sans-serif";
   ctx.textBaseline = "middle";
-  ctx.fillText("HH GOA 2026 · BUILDER PASS", cx + 32, cy + 44);
+  ctx.fillText("HH GOA 2026 · #FrameInGoa", cx + 32, cy + 44);
 
   for (let i = 0; i < 4; i++) {
     drawStar(ctx, cx + cw - 140 + i * 36, cy + 44, 14, "#FAF4E8");
@@ -353,7 +353,6 @@ function renderGoaPass(ctx, img, filterCss, details, idCode, stickers = []) {
   ctx.fillStyle = "#0B261E";
   ctx.fillText((details.location || "GOA, INDIA").toUpperCase(), dx, dy + 28);
 
-  // Footer Barcode + ID
   const fy = cy + ch - 66;
   drawBarcode(ctx, cx + 36, fy, 240, 42, "#0B261E");
 
@@ -363,7 +362,7 @@ function renderGoaPass(ctx, img, filterCss, details, idCode, stickers = []) {
   ctx.fillText(idCode, cx + cw - 36, fy + 26);
   ctx.textAlign = "left";
 
-  // Gold Hologram
+  // Stamp
   ctx.save();
   ctx.translate(cx + cw - 120, fy - 68);
   ctx.rotate(-0.2);
@@ -375,12 +374,11 @@ function renderGoaPass(ctx, img, filterCss, details, idCode, stickers = []) {
   ctx.font = "800 11px 'Space Mono', monospace";
   ctx.fillStyle = "rgba(11,38,30,0.75)";
   ctx.textAlign = "center";
-  ctx.fillText("OFFICIAL BUILDER", 0, -6);
-  ctx.fillText("HH GOA 2026", 0, 10);
+  ctx.fillText("#FrameInGoa", 0, -6);
+  ctx.fillText("VERIFIED 2026", 0, 10);
   ctx.textAlign = "left";
   ctx.restore();
 
-  // Draw Stickers
   drawStickers(ctx, cx, cy, cw, ch, stickers);
 }
 
@@ -408,13 +406,12 @@ function renderLicense(ctx, img, filterCss, details, idCode, stickers = []) {
     ctx.stroke();
   }
 
-  // Header
   ctx.fillStyle = "#262018";
   ctx.font = "800 28px 'Archivo Black', sans-serif";
   ctx.fillText("CREATIVE BUILDER LICENSE", cx + 240, cy + 55);
   ctx.font = "700 15px 'Space Mono', monospace";
   ctx.fillStyle = "#6E614E";
-  ctx.fillText("STATE OF CREATIVITY · HH GOA", cx + 240, cy + 85);
+  ctx.fillText("#FrameInGoa · STATE OF CREATIVITY", cx + 240, cy + 85);
 
   ctx.textAlign = "right";
   ctx.font = "700 13px 'Space Mono', monospace";
@@ -424,7 +421,6 @@ function renderLicense(ctx, img, filterCss, details, idCode, stickers = []) {
   ctx.fillText(idCode.replace("H26-", "GOA-"), cx + cw - 32, cy + 72);
   ctx.textAlign = "left";
 
-  // Polaroid Photo
   const px = cx + 40, py = cy + 110, pw = 220, ph = 265;
   ctx.save();
   ctx.translate(-3, 3);
@@ -450,7 +446,6 @@ function renderLicense(ctx, img, filterCss, details, idCode, stickers = []) {
   ctx.restore();
   ctx.restore();
 
-  // Paperclip
   ctx.save();
   ctx.translate(px + 24, py - 8);
   ctx.strokeStyle = "#7A8494";
@@ -464,7 +459,6 @@ function renderLicense(ctx, img, filterCss, details, idCode, stickers = []) {
   ctx.stroke();
   ctx.restore();
 
-  // Details
   const dx = px + pw + 55;
   let dy = py + 12;
   const field = (label, value, size = 30) => {
@@ -482,7 +476,6 @@ function renderLicense(ctx, img, filterCss, details, idCode, stickers = []) {
   field("SPECIALTY", (details.stack || "FULL STACK"), 26);
   field("BASE LOCATION", (details.location || "GOA, INDIA"), 24);
 
-  // Wax Seal
   ctx.save();
   ctx.translate(cx + cw - 120, cy + ch - 120);
   ctx.rotate(0.15);
@@ -494,8 +487,8 @@ function renderLicense(ctx, img, filterCss, details, idCode, stickers = []) {
   ctx.font = "700 12px 'Space Mono', monospace";
   ctx.fillStyle = "rgba(168,34,50,0.8)";
   ctx.textAlign = "center";
-  ctx.fillText("GOA APPROVED", 0, -4);
-  ctx.fillText("2026 VERIFIED", 0, 12);
+  ctx.fillText("#FrameInGoa", 0, -4);
+  ctx.fillText("APPROVED 2026", 0, 12);
   ctx.textAlign = "left";
   ctx.restore();
 
@@ -505,8 +498,6 @@ function renderLicense(ctx, img, filterCss, details, idCode, stickers = []) {
   ctx.fillText("EXPIRY: NEVER (LIFETIME BUILDER)", cx + cw - 310, cy + ch - 28);
 
   ctx.restore();
-
-  // Draw Stickers
   drawStickers(ctx, cx, cy, cw, ch, stickers);
 }
 
@@ -518,7 +509,6 @@ function renderDigital(ctx, img, filterCss, details, idCode, stickers = []) {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, CARD_W, CARD_H);
 
-  // Grid
   ctx.strokeStyle = "rgba(56, 239, 172, 0.08)";
   for (let gx = 0; gx < CARD_W; gx += 35) {
     ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, CARD_H); ctx.stroke();
@@ -540,7 +530,7 @@ function renderDigital(ctx, img, filterCss, details, idCode, stickers = []) {
   ctx.fillRect(cx + cw + 2, cy - 2, 4, 20);
 
   ctx.font = "700 24px 'Space Mono', monospace";
-  ctx.fillText("HH.GOA // 2026", cx + 32, cy + 46);
+  ctx.fillText("#FrameInGoa // 2026", cx + 32, cy + 46);
   ctx.textAlign = "right";
   ctx.fillStyle = "#11998E";
   ctx.font = "700 16px 'Space Mono', monospace";
@@ -596,7 +586,6 @@ function renderDigital(ctx, img, filterCss, details, idCode, stickers = []) {
   ctx.fillText("UUID: " + idCode, cx + 32, fy);
   drawBarcode(ctx, cx + 32, fy + 16, cw - 64, 28, "#38EFAC");
 
-  // Draw Stickers
   drawStickers(ctx, cx, cy, cw, ch, stickers);
 }
 
@@ -621,8 +610,8 @@ function renderSunset(ctx, img, filterCss, details, idCode, stickers = []) {
   ctx.fill();
 
   ctx.fillStyle = "#F0C27B";
-  ctx.font = "800 30px 'Outfit', sans-serif";
-  ctx.fillText("GOA SUNSET BUILDER CLUB", cx + 36, cy + 52);
+  ctx.font = "800 28px 'Outfit', sans-serif";
+  ctx.fillText("GOA SUNSET CLUB · #FrameInGoa", cx + 36, cy + 52);
 
   ctx.textAlign = "right";
   ctx.font = "700 16px 'Space Mono', monospace";
@@ -686,7 +675,6 @@ function renderSunset(ctx, img, filterCss, details, idCode, stickers = []) {
   const fy = cy + ch - 60;
   drawBarcode(ctx, cx + 36, fy, cw - 72, 32, "#F0C27B");
 
-  // Draw Stickers
   drawStickers(ctx, cx, cy, cw, ch, stickers);
 }
 
@@ -717,9 +705,10 @@ export default function App() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [theme, setTheme] = useState("emerald");
   const [stickers, setStickers] = useState([STICKER_CATALOG[0]]);
-  const [exportFormat, setExportFormat] = useState("4k"); // 'standard' | '4k' | 'story'
+  const [exportFormat, setExportFormat] = useState("4k");
+  const [draggingPhoto, setDraggingPhoto] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  // 3D Parallax Tilt state
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, px: 50, py: 50, active: false });
 
   const fileInputRef = useRef(null);
@@ -741,7 +730,7 @@ export default function App() {
     setStep(STEPS[Math.max(stepIndex - 1, 0)]);
   };
 
-  // Load image element
+  // Instant image loading with zero lag
   useEffect(() => {
     if (!photoSrc) { setImgEl(null); return; }
     const im = new Image();
@@ -750,7 +739,7 @@ export default function App() {
     im.src = photoSrc;
   }, [photoSrc]);
 
-  // Render live preview canvas
+  // Realtime canvas update
   const updateCanvas = useCallback(() => {
     const filterCss = FILTERS.find((f) => f.id === filter)?.css || "none";
     const renderer = RENDERERS[template];
@@ -833,6 +822,16 @@ export default function App() {
     reader.readAsDataURL(f);
   };
 
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) {
+      const reader = new FileReader();
+      reader.onload = () => setPhotoSrc(reader.result);
+      reader.readAsDataURL(f);
+    }
+  };
+
   const toggleSticker = (st) => {
     playSound('stamp', soundEnabled);
     setStickers((prev) => {
@@ -864,20 +863,45 @@ export default function App() {
     setTilt({ rx: 0, ry: 0, px: 50, py: 50, active: false });
   };
 
-  // Download Suite (4K, Story 9:16, or Standard)
+  // Touch Pan/Drag Adjustment Handlers for Photo Positioning
+  const handlePanStart = (e) => {
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    setDraggingPhoto(true);
+    setDragStart({ x: clientX, y: clientY });
+  };
+
+  const handlePanMove = (e) => {
+    if (!draggingPhoto) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const deltaX = (clientX - dragStart.x) / 150;
+    const deltaY = (clientY - dragStart.y) / 150;
+
+    setDetails((d) => ({
+      ...d,
+      offsetX: Math.max(-1, Math.min(1, d.offsetX + deltaX)),
+      offsetY: Math.max(-1, Math.min(1, d.offsetY + deltaY))
+    }));
+    setDragStart({ x: clientX, y: clientY });
+  };
+
+  const handlePanEnd = () => {
+    setDraggingPhoto(false);
+  };
+
+  // Real Image File Export Download (Native Blob output)
   const downloadCard = () => {
     playSound('click', soundEnabled);
     const filterCss = FILTERS.find((f) => f.id === filter)?.css || "none";
     const renderer = RENDERERS[template];
 
     if (exportFormat === "story") {
-      // 9:16 Story format (1080 x 1920)
       const storyC = document.createElement("canvas");
       storyC.width = 1080;
       storyC.height = 1920;
       const ctx = storyC.getContext("2d");
 
-      // Story ambient gradient
       const bgGrad = ctx.createLinearGradient(0, 0, 1080, 1920);
       bgGrad.addColorStop(0, "#091E16");
       bgGrad.addColorStop(0.5, "#154233");
@@ -885,17 +909,15 @@ export default function App() {
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, 1080, 1920);
 
-      // Header title
       ctx.fillStyle = "#FF6B4A";
       ctx.font = "800 36px 'Archivo Black', sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("HH GOA 2026 BUILDER PASS", 540, 220);
+      ctx.fillText("HH GOA 2026 · #FrameInGoa", 540, 220);
 
       ctx.fillStyle = "rgba(255,255,255,0.7)";
       ctx.font = "700 20px 'Space Mono', monospace";
-      ctx.fillText(`OFFICIAL BADGE · ${idCode}`, 540, 265);
+      ctx.fillText(`OFFICIAL BUILDER PASS · ${idCode}`, 540, 265);
 
-      // Draw card centered
       const cardCanvas = document.createElement("canvas");
       cardCanvas.width = CARD_W;
       cardCanvas.height = CARD_H;
@@ -908,17 +930,15 @@ export default function App() {
 
       ctx.drawImage(cardCanvas, targetX, targetY, targetW, targetH);
 
-      // Story Footer
       ctx.fillStyle = "#FFD23F";
       ctx.font = "700 24px 'Space Grotesk', sans-serif";
-      ctx.fillText("🌴 BUILD IN GOA · 2026 🌴", 540, 1720);
+      ctx.fillText("🌴 BUILD IN GOA 2026 · #FrameInGoa 🌴", 540, 1720);
 
       const link = document.createElement("a");
-      link.download = `hh-goa-story-${(details.name || "builder").replace(/\s+/g, "_").toLowerCase()}.png`;
+      link.download = `hh-goa-story-frameingoa-${(details.name || "builder").replace(/\s+/g, "_").toLowerCase()}.png`;
       link.href = storyC.toDataURL("image/png");
       link.click();
     } else {
-      // 4K or Standard
       const scale = exportFormat === "4k" ? 3 : 1;
       const tempC = document.createElement("canvas");
       tempC.width = CARD_W * scale;
@@ -928,10 +948,38 @@ export default function App() {
       renderer(ctx, imgEl, filterCss, details, idCode, stickers);
 
       const link = document.createElement("a");
-      link.download = `hh-goa-pass-${exportFormat}-${(details.name || "builder").replace(/\s+/g, "_").toLowerCase()}.png`;
+      link.download = `hh-goa-pass-frameingoa-${(details.name || "builder").replace(/\s+/g, "_").toLowerCase()}.png`;
       link.href = tempC.toDataURL("image/png");
       link.click();
     }
+  };
+
+  // Native Mobile File Share Sheet with attached PNG image + #FrameInGoa text
+  const shareNativeOrSocial = async () => {
+    playSound('click', soundEnabled);
+    const c = canvasRef.current || liveCanvasRef.current;
+    if (!c) return;
+
+    const captionText = `I just generated my official HH Goa 2026 Builder Pass! 🌴🪪 #FrameInGoa`;
+
+    c.toBlob(async (blob) => {
+      if (!blob) return;
+      const file = new File([blob], `hh-goa-pass-${idCode}.png`, { type: "image/png" });
+
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: "HH Goa 2026 Builder Pass",
+            text: captionText,
+            files: [file]
+          });
+          return;
+        } catch (err) {}
+      }
+
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(captionText)}&hashtags=FrameInGoa`;
+      window.open(twitterUrl, "_blank");
+    }, "image/png");
   };
 
   const copyToClipboard = async () => {
@@ -944,17 +992,9 @@ export default function App() {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } catch (err) {
-        alert("Pass copied to clipboard!");
+        alert("#FrameInGoa image copied to clipboard!");
       }
     });
-  };
-
-  const shareX = () => {
-    playSound('click', soundEnabled);
-    const text = encodeURIComponent(
-      `Check out my official HH Goa 2026 Builder Pass — ${details.title || "THE BUILDER"} 🌴🪪 #HHGoa2026 #BuildInGoa`
-    );
-    window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank");
   };
 
   const themeStyles = {
@@ -987,7 +1027,7 @@ export default function App() {
       background: themeStyles.bg,
       minHeight: "100vh",
       color: "#F8FAFC",
-      padding: "24px 16px 48px",
+      padding: "16px 12px 40px",
       boxSizing: "border-box",
       position: "relative",
       overflowX: "hidden"
@@ -1008,11 +1048,12 @@ export default function App() {
           font-family: 'Space Grotesk', sans-serif;
           font-weight: 700;
           letter-spacing: 0.03em;
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
           display: inline-flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
+          min-height: 48px;
         }
         .btn-glow:hover {
           transform: translateY(-2px) scale(1.02);
@@ -1024,18 +1065,15 @@ export default function App() {
         .btn-primary {
           background: ${themeStyles.accent};
           color: #0F172A;
-          padding: 14px 28px;
-          font-size: 16px;
+          padding: 14px 24px;
+          font-size: 15px;
         }
         .btn-secondary {
           background: rgba(255,255,255,0.08);
           color: #F8FAFC;
           border: 1px solid ${themeStyles.border}!important;
-          padding: 12px 22px;
+          padding: 12px 20px;
           font-size: 14px;
-        }
-        .btn-secondary:hover {
-          background: rgba(255,255,255,0.15);
         }
         .chip-option {
           cursor: pointer;
@@ -1064,19 +1102,18 @@ export default function App() {
           color: #F8FAFC;
           font-family: 'Space Grotesk', sans-serif;
           font-size: 15px;
-          transition: border-color 0.2s;
         }
         .input-stylish:focus {
           outline: none;
           border-color: ${themeStyles.accent};
         }
         .step-pill {
-          padding: 8px 16px;
+          padding: 8px 14px;
           border-radius: 999px;
-          font-size: 13px;
+          font-size: 12px;
           font-weight: 700;
           cursor: pointer;
-          transition: all 0.2s;
+          white-space: nowrap;
         }
         .step-pill.active {
           background: ${themeStyles.accent};
@@ -1087,21 +1124,30 @@ export default function App() {
           color: rgba(255,255,255,0.6);
         }
         .avatar-thumb {
-          width: 60px;
-          height: 60px;
+          width: 56px;
+          height: 56px;
           border-radius: 12px;
           object-fit: cover;
           cursor: pointer;
           border: 2px solid transparent;
-          transition: transform 0.2s, border-color 0.2s;
         }
-        .avatar-thumb:hover { transform: scale(1.08); }
         .avatar-thumb.active { border-color: ${themeStyles.accent}; }
+        
+        @media (max-width: 768px) {
+          .main-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .sticky-preview {
+            position: relative !important;
+            top: 0 !important;
+            margin-bottom: 20px;
+          }
+        }
       `}</style>
 
-      {/* Background glowing ambient light */}
+      {/* Ambient background glow */}
       <div style={{
-        position: "absolute", top: "-10%", left: "15%", width: 500, height: 500,
+        position: "absolute", top: "-10%", left: "15%", width: 450, height: 450,
         background: themeStyles.glow, borderRadius: "50%", filter: "blur(140px)", pointerEvents: "none"
       }} />
 
@@ -1109,34 +1155,32 @@ export default function App() {
         {/* Header bar */}
         <header style={{
           display: "flex", justifyContent: "space-between", alignItems: "center",
-          marginBottom: 28, flexWrap: "wrap", gap: 16
+          marginBottom: 20, flexWrap: "wrap", gap: 12
         }}>
           <div>
             <div style={{
               display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "4px 12px", borderRadius: 999, background: "rgba(255,255,255,0.08)",
-              fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", color: themeStyles.accent, marginBottom: 6
+              padding: "4px 10px", borderRadius: 999, background: "rgba(255,255,255,0.08)",
+              fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: themeStyles.accent, marginBottom: 4
             }}>
-              <Sparkles size={13} /> HH GOA 2026 PRO STUDIO
+              <Sparkles size={12} /> HH GOA 2026 · #FrameInGoa
             </div>
-            <h1 style={{ fontFamily: "'Anton', sans-serif", fontSize: 36, margin: 0, letterSpacing: "0.02em" }}>
+            <h1 style={{ fontFamily: "'Anton', sans-serif", fontSize: 30, margin: 0, letterSpacing: "0.02em" }}>
               BUILDER PHOTOBOOTH
             </h1>
           </div>
 
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            {/* Audio FX Toggle Button */}
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button
               className="btn-glow btn-secondary"
-              style={{ padding: "8px 14px" }}
+              style={{ padding: "8px 12px", minHeight: 40 }}
               onClick={() => { setSoundEnabled(!soundEnabled); playSound('click', true); }}
               title={soundEnabled ? "Mute Audio" : "Enable Audio"}
             >
-              {soundEnabled ? <Volume2 size={16} color={themeStyles.accent} /> : <VolumeX size={16} color="rgba(255,255,255,0.4)" />}
+              {soundEnabled ? <Volume2 size={15} color={themeStyles.accent} /> : <VolumeX size={15} color="rgba(255,255,255,0.4)" />}
             </button>
 
-            {/* Theme switcher */}
-            <div style={{ display: "flex", gap: 6, background: "rgba(0,0,0,0.3)", padding: 4, borderRadius: 999, border: "1px solid rgba(255,255,255,0.1)" }}>
+            <div style={{ display: "flex", gap: 4, background: "rgba(0,0,0,0.3)", padding: 4, borderRadius: 999, border: "1px solid rgba(255,255,255,0.1)" }}>
               <button className={`step-pill ${theme === 'emerald' ? 'active' : 'inactive'}`} onClick={() => { setTheme('emerald'); playSound('click', soundEnabled); }}>
                 🌴 Emerald
               </button>
@@ -1150,14 +1194,55 @@ export default function App() {
           </div>
         </header>
 
-        {/* Main Grid: Wizard Controls + 3D Parallax Preview */}
-        <div style={{ display: "grid", gridTemplateColumns: step === "welcome" ? "1fr" : "minmax(340px, 1fr) 530px", gap: 28, alignItems: "start" }}>
+        {/* Main Mobile-Responsive Grid */}
+        <div className="main-grid" style={{ display: "grid", gridTemplateColumns: step === "welcome" ? "1fr" : "minmax(320px, 1fr) 520px", gap: 24, alignItems: "start" }}>
           
+          {/* Mobile Sticky Top Preview for instant feedback */}
+          {step !== "welcome" && (
+            <div className="sticky-preview" style={{ position: "sticky", top: 16, zIndex: 10 }}>
+              <div className="glass-panel" style={{ padding: 16, textAlign: "center" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, padding: "0 4px" }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: themeStyles.accent, letterSpacing: "0.08em", display: "flex", alignItems: "center", gap: 4 }}>
+                    <Move size={13} /> 3D PARALLAX PREVIEW
+                  </div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontFamily: "'Space Mono', monospace" }}>
+                    #FrameInGoa · {idCode}
+                  </div>
+                </div>
+
+                <div
+                  onMouseMove={handleMouseMove}
+                  onMouseLeave={handleMouseLeave}
+                  style={{ perspective: 1000, transformStyle: "preserve-3d", cursor: "pointer" }}
+                >
+                  <div style={{
+                    transform: `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg) scale3d(1.02, 1.02, 1.02)`,
+                    transition: tilt.active ? "transform 0.08s ease-out" : "transform 0.5s ease-out",
+                    position: "relative", borderRadius: 16, overflow: "hidden",
+                    boxShadow: tilt.active ? `0 20px 45px rgba(0,0,0,0.6), 0 0 25px ${themeStyles.glow}` : "0 12px 30px rgba(0,0,0,0.5)",
+                    border: `1px solid ${themeStyles.border}`
+                  }}>
+                    <canvas ref={liveCanvasRef} style={{ width: "100%", height: "auto", display: "block" }} />
+                    <canvas ref={canvasRef} style={{ display: "none" }} />
+
+                    {tilt.active && (
+                      <div style={{
+                        position: "absolute", inset: 0, pointerEvents: "none",
+                        background: `radial-gradient(circle at ${tilt.px}% ${tilt.py}%, rgba(255,255,255,0.3) 0%, transparent 60%)`,
+                        mixBlendMode: "overlay"
+                      }} />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Left Column: Interactive Wizard Controls */}
-          <div className="glass-panel" style={{ padding: 28 }}>
+          <div className="glass-panel" style={{ padding: 24 }}>
             
             {step !== "welcome" && (
-              <div style={{ display: "flex", gap: 8, marginBottom: 24, overflowX: "auto", paddingBottom: 4 }}>
+              <div style={{ display: "flex", gap: 6, marginBottom: 20, overflowX: "auto", paddingBottom: 6 }}>
                 {STEPS.slice(1).map((s, idx) => (
                   <button
                     key={s}
@@ -1172,34 +1257,54 @@ export default function App() {
 
             {/* WELCOME STEP */}
             {step === "welcome" && (
-              <div style={{ textAlign: "center", padding: "40px 20px" }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>🌴🪪✨</div>
-                <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 28, fontWeight: 800, marginBottom: 12 }}>
-                  Build Your Custom HH Goa 2026 VIP Pass
+              <div style={{ textAlign: "center", padding: "30px 16px" }}>
+                <div style={{ fontSize: 44, marginBottom: 14 }}>🌴📸✨</div>
+                <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 26, fontWeight: 800, marginBottom: 10 }}>
+                  HH Goa 2026 Builder Pass Studio
                 </h2>
-                <p style={{ fontSize: 16, lineHeight: 1.6, color: "rgba(248,250,252,0.75)", maxWidth: 520, margin: "0 auto 32px" }}>
-                  Features interactive 3D physics, retro sticker overlay studio, photo cutout portrait mode, retro camera audio shutter, and 4K ultra HD downloads!
+                <p style={{ fontSize: 15, lineHeight: 1.6, color: "rgba(248,250,252,0.75)", maxWidth: 480, margin: "0 auto 28px" }}>
+                  Instant, mobile-optimized builder pass generator. Upload any photo, pick a vibe, add custom stamps, and share with <b>#FrameInGoa</b>!
                 </p>
                 <button className="btn-glow btn-primary" onClick={goNext}>
-                  START CREATING PASS <ArrowRight size={18} />
+                  CREATE MY PASS <ArrowRight size={18} />
                 </button>
               </div>
             )}
 
-            {/* STEP 1: PHOTO */}
+            {/* STEP 1: PHOTO (Fast upload, dropzone, auto-centering for all aspect ratios) */}
             {step === "photo" && (
               <div>
-                <h3 style={{ fontSize: 20, fontWeight: 700, marginTop: 0, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-                  <Camera size={20} color={themeStyles.accent} /> Choose Your Photo
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginTop: 0, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                  <Camera size={18} color={themeStyles.accent} /> Fast Photo Upload
                 </h3>
 
+                {/* File Dropzone */}
                 {!cameraOn && (
-                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
-                    <button className="btn-glow btn-primary" onClick={startCamera}>
-                      <Camera size={16} /> Open Camera
+                  <div
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={handleDrop}
+                    style={{
+                      border: `2px dashed ${themeStyles.border}`, borderRadius: 16,
+                      padding: "20px 14px", textAlign: "center", background: "rgba(0,0,0,0.2)",
+                      marginBottom: 16, cursor: "pointer"
+                    }}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload size={24} color={themeStyles.accent} style={{ marginBottom: 6 }} />
+                    <div style={{ fontSize: 14, fontWeight: 700 }}>Tap or Drop Any Photo Here</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>
+                      Supports Portrait, Landscape, Square & Off-Center Photos
+                    </div>
+                  </div>
+                )}
+
+                {!cameraOn && (
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
+                    <button className="btn-glow btn-primary" style={{ flex: 1 }} onClick={startCamera}>
+                      <Camera size={15} /> Open Camera
                     </button>
-                    <button className="btn-glow btn-secondary" onClick={() => fileInputRef.current?.click()}>
-                      <Upload size={16} /> Upload Photo
+                    <button className="btn-glow btn-secondary" style={{ flex: 1 }} onClick={() => fileInputRef.current?.click()}>
+                      <Upload size={15} /> Select File
                     </button>
                     <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
                   </div>
@@ -1212,19 +1317,19 @@ export default function App() {
                 )}
 
                 {cameraOn && (
-                  <div style={{ textAlign: "center", position: "relative", marginBottom: 20 }}>
-                    <video ref={videoRef} autoPlay playsInline style={{ width: "100%", maxHeight: 300, borderRadius: 16, objectFit: "cover", transform: "scaleX(-1)", border: `2px solid ${themeStyles.accent}` }} />
+                  <div style={{ textAlign: "center", position: "relative", marginBottom: 16 }}>
+                    <video ref={videoRef} autoPlay playsInline style={{ width: "100%", maxHeight: 260, borderRadius: 16, objectFit: "cover", transform: "scaleX(-1)", border: `2px solid ${themeStyles.accent}` }} />
                     
                     {countdown !== null && (
                       <div style={{
                         position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-                        fontSize: 72, fontWeight: 800, color: "#FFD23F", textShadow: "0 0 20px rgba(0,0,0,0.8)"
+                        fontSize: 64, fontWeight: 800, color: "#FFD23F", textShadow: "0 0 20px rgba(0,0,0,0.8)"
                       }}>
                         {countdown}
                       </div>
                     )}
 
-                    <div style={{ marginTop: 12, display: "flex", gap: 10, justifyContent: "center" }}>
+                    <div style={{ marginTop: 10, display: "flex", gap: 10, justifyContent: "center" }}>
                       <button className="btn-glow btn-primary" onClick={capturePhotoWithCountdown}>
                         📷 Snap Photo (3s)
                       </button>
@@ -1235,12 +1340,12 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Avatar Presets */}
-                <div style={{ marginTop: 16 }}>
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginBottom: 10 }}>
-                    OR CHOOSE SAMPLE AVATAR:
+                {/* Sample Avatars */}
+                <div style={{ marginTop: 12 }}>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 8 }}>
+                    OR TAP A SAMPLE AVATAR:
                   </div>
-                  <div style={{ display: "flex", gap: 12 }}>
+                  <div style={{ display: "flex", gap: 10 }}>
                     {SAMPLE_AVATARS.map((av, i) => (
                       <img
                         key={i}
@@ -1253,27 +1358,26 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Photo Framing & Cutout Controls */}
-                <div style={{ marginTop: 24, padding: 16, background: "rgba(0,0,0,0.2)", borderRadius: 16, border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
-                      <Sliders size={14} color={themeStyles.accent} /> Frame Adjustments
+                {/* Photo Drag & Pan Adjustments */}
+                <div style={{ marginTop: 20, padding: 14, background: "rgba(0,0,0,0.2)", borderRadius: 14, border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
+                      <Sliders size={13} color={themeStyles.accent} /> Touch Pan & Frame Adjust
                     </div>
 
-                    {/* Cutout / Vignette Toggle */}
                     <button
                       className={`step-pill ${details.cutoutMode ? 'active' : 'inactive'}`}
-                      style={{ padding: "4px 10px", fontSize: 11 }}
+                      style={{ padding: "4px 8px", fontSize: 10 }}
                       onClick={() => { setDetails((d) => ({ ...d, cutoutMode: !d.cutoutMode })); playSound('click', soundEnabled); }}
                     >
                       ✨ Cutout Vignette: {details.cutoutMode ? "ON" : "OFF"}
                     </button>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                     <div>
-                      <label style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", display: "block", marginBottom: 4 }}>
-                        Zoom Level ({details.zoom.toFixed(1)}x)
+                      <label style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", display: "block", marginBottom: 2 }}>
+                        Zoom ({details.zoom.toFixed(1)}x)
                       </label>
                       <input
                         type="range" min="1" max="2" step="0.1" value={details.zoom}
@@ -1282,7 +1386,7 @@ export default function App() {
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", display: "block", marginBottom: 4 }}>
+                      <label style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", display: "block", marginBottom: 2 }}>
                         Vertical Shift
                       </label>
                       <input
@@ -1302,22 +1406,22 @@ export default function App() {
             {/* STEP 2: STYLE / FILTERS */}
             {step === "style" && (
               <div>
-                <h3 style={{ fontSize: 20, fontWeight: 700, marginTop: 0, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-                  <Palette size={20} color={themeStyles.accent} /> Aesthetic Photo Filters
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginTop: 0, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                  <Palette size={18} color={themeStyles.accent} /> Instant Photo Vibe
                 </h3>
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 10 }}>
                   {FILTERS.map((f) => (
                     <div
                       key={f.id}
                       className={`chip-option ${filter === f.id ? "active" : ""}`}
                       onClick={() => { setFilter(f.id); playSound('click', soundEnabled); }}
-                      style={{ textAlign: "center", padding: 12 }}
+                      style={{ textAlign: "center", padding: 10 }}
                     >
-                      <div style={{ width: "100%", height: 60, borderRadius: 10, marginBottom: 8, overflow: "hidden" }}>
+                      <div style={{ width: "100%", height: 50, borderRadius: 8, marginBottom: 6, overflow: "hidden" }}>
                         {photoSrc && <img src={photoSrc} style={{ width: "100%", height: "100%", objectFit: "cover", filter: f.css }} alt={f.label} />}
                       </div>
-                      <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.05em" }}>{f.label}</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em" }}>{f.label}</div>
                     </div>
                   ))}
                 </div>
@@ -1329,13 +1433,13 @@ export default function App() {
             {/* STEP 3: DETAILS */}
             {step === "details" && (
               <div>
-                <h3 style={{ fontSize: 20, fontWeight: 700, marginTop: 0, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-                  <User size={20} color={themeStyles.accent} /> Profile Details
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginTop: 0, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                  <User size={18} color={themeStyles.accent} /> Builder Profile
                 </h3>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: themeStyles.accent, marginBottom: 6, display: "block" }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: themeStyles.accent, marginBottom: 4, display: "block" }}>
                       BUILDER NAME
                     </label>
                     <input
@@ -1348,7 +1452,7 @@ export default function App() {
                   </div>
 
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: themeStyles.accent, marginBottom: 6, display: "block" }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: themeStyles.accent, marginBottom: 4, display: "block" }}>
                       TECH STACK & ROLE
                     </label>
                     <input
@@ -1358,13 +1462,13 @@ export default function App() {
                       value={details.stack}
                       onChange={(e) => setDetails((d) => ({ ...d, stack: e.target.value }))}
                     />
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
                       {STACK_PRESETS.map((st) => (
                         <button
                           key={st}
                           style={{
                             border: "none", background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.8)",
-                            borderRadius: 999, padding: "4px 10px", fontSize: 11, cursor: "pointer"
+                            borderRadius: 999, padding: "4px 8px", fontSize: 10, cursor: "pointer"
                           }}
                           onClick={() => { setDetails((d) => ({ ...d, stack: st })); playSound('click', soundEnabled); }}
                         >
@@ -1375,24 +1479,24 @@ export default function App() {
                   </div>
 
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: themeStyles.accent, marginBottom: 6, display: "block" }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: themeStyles.accent, marginBottom: 4, display: "block" }}>
                       HONORARY TITLE
                     </label>
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ display: "flex", gap: 6 }}>
                       <input
                         className="input-stylish"
                         type="text"
                         value={details.title}
                         onChange={(e) => setDetails((d) => ({ ...d, title: e.target.value }))}
                       />
-                      <button className="btn-glow btn-secondary" style={{ padding: "10px 14px" }} onClick={shuffleTitle} title="Shuffle Title">
-                        <Shuffle size={16} />
+                      <button className="btn-glow btn-secondary" style={{ padding: "8px 12px" }} onClick={shuffleTitle} title="Shuffle Title">
+                        <Shuffle size={15} />
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 700, color: themeStyles.accent, marginBottom: 6, display: "block" }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: themeStyles.accent, marginBottom: 4, display: "block" }}>
                       LOCATION
                     </label>
                     <input
@@ -1402,20 +1506,6 @@ export default function App() {
                       value={details.location}
                       onChange={(e) => setDetails((d) => ({ ...d, location: e.target.value }))}
                     />
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-                      {LOCATION_PRESETS.map((loc) => (
-                        <button
-                          key={loc}
-                          style={{
-                            border: "none", background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.8)",
-                            borderRadius: 999, padding: "4px 10px", fontSize: 11, cursor: "pointer"
-                          }}
-                          onClick={() => { setDetails((d) => ({ ...d, location: loc })); playSound('click', soundEnabled); }}
-                        >
-                          📍 {loc}
-                        </button>
-                      ))}
-                    </div>
                   </div>
                 </div>
 
@@ -1423,18 +1513,18 @@ export default function App() {
               </div>
             )}
 
-            {/* STEP 4: STICKER STUDIO */}
+            {/* STEP 4: STICKER STUDIO (#FrameInGoa default) */}
             {step === "stickers" && (
               <div>
-                <h3 style={{ fontSize: 20, fontWeight: 700, marginTop: 0, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-                  <Tag size={20} color={themeStyles.accent} /> Sticker & Badge Overlay Studio
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginTop: 0, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                  <Tag size={18} color={themeStyles.accent} /> Sticker & Badge Studio
                 </h3>
 
-                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", marginBottom: 18 }}>
-                  Click stickers to stamp them onto your pass badge in realtime!
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", marginBottom: 14 }}>
+                  Tap stickers to stamp them onto your pass badge in realtime!
                 </p>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   {STICKER_CATALOG.map((st) => {
                     const active = stickers.some((s) => s.id === st.id);
                     return (
@@ -1442,13 +1532,13 @@ export default function App() {
                         key={st.id}
                         className={`chip-option ${active ? "active" : ""}`}
                         onClick={() => toggleSticker(st)}
-                        style={{ padding: 14, display: "flex", alignItems: "center", gap: 10 }}
+                        style={{ padding: 12, display: "flex", alignItems: "center", gap: 8 }}
                       >
-                        <span style={{ fontSize: 22 }}>{st.icon}</span>
+                        <span style={{ fontSize: 20 }}>{st.icon}</span>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 800 }}>{st.text}</div>
-                          <div style={{ fontSize: 11, color: active ? themeStyles.accent : "rgba(255,255,255,0.5)" }}>
-                            {active ? "✓ Stamped" : "+ Click to stamp"}
+                          <div style={{ fontSize: 12, fontWeight: 800 }}>{st.text}</div>
+                          <div style={{ fontSize: 10, color: active ? themeStyles.accent : "rgba(255,255,255,0.5)" }}>
+                            {active ? "✓ Stamped" : "+ Stamp"}
                           </div>
                         </div>
                       </div>
@@ -1460,26 +1550,26 @@ export default function App() {
               </div>
             )}
 
-            {/* STEP 5: TEMPLATE SELECTOR */}
+            {/* STEP 5: TEMPLATES */}
             {step === "template" && (
               <div>
-                <h3 style={{ fontSize: 20, fontWeight: 700, marginTop: 0, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-                  <ImageIcon size={20} color={themeStyles.accent} /> Card Design Template
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginTop: 0, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                  <ImageIcon size={18} color={themeStyles.accent} /> Pass Design Template
                 </h3>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   {TEMPLATES.map((t) => (
                     <div
                       key={t.id}
                       className={`chip-option ${template === t.id ? "active" : ""}`}
                       onClick={() => { setTemplate(t.id); playSound('click', soundEnabled); }}
-                      style={{ padding: 16 }}
+                      style={{ padding: 14 }}
                     >
-                      <div style={{ fontSize: 24, marginBottom: 6 }}>{t.icon}</div>
-                      <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, fontWeight: 800, marginBottom: 4 }}>
+                      <div style={{ fontSize: 22, marginBottom: 4 }}>{t.icon}</div>
+                      <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, fontWeight: 800, marginBottom: 2 }}>
                         {t.name}
                       </div>
-                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", lineHeight: 1.4 }}>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.3 }}>
                         {t.blurb}
                       </div>
                     </div>
@@ -1490,59 +1580,61 @@ export default function App() {
               </div>
             )}
 
-            {/* STEP 6: FINAL EXPORT & FORMATS */}
+            {/* STEP 6: FINAL EXPORT & NATIVE SHARE WITH #FrameInGoa */}
             {step === "final" && (
               <div>
-                <h3 style={{ fontSize: 20, fontWeight: 700, marginTop: 0, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-                  <ShieldCheck size={20} color={themeStyles.accent} /> Download & Share Options
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginTop: 0, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                  <ShieldCheck size={18} color={themeStyles.accent} /> Download & Share #FrameInGoa
                 </h3>
 
                 {/* Format selection */}
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ fontSize: 12, fontWeight: 700, color: themeStyles.accent, marginBottom: 8, display: "block" }}>
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: themeStyles.accent, marginBottom: 6, display: "block" }}>
                     SELECT DOWNLOAD FORMAT
                   </label>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
                     <button
                       className={`step-pill ${exportFormat === '4k' ? 'active' : 'inactive'}`}
-                      style={{ borderRadius: 12, textAlign: "center", padding: "10px 6px" }}
+                      style={{ borderRadius: 10, textAlign: "center", padding: "8px 4px" }}
                       onClick={() => { setExportFormat('4k'); playSound('click', soundEnabled); }}
                     >
-                      <Monitor size={14} style={{ verticalAlign: "-2px" }} /> 4K Ultra HD
+                      <Monitor size={12} style={{ verticalAlign: "-1px" }} /> 4K PNG
                     </button>
                     <button
                       className={`step-pill ${exportFormat === 'story' ? 'active' : 'inactive'}`}
-                      style={{ borderRadius: 12, textAlign: "center", padding: "10px 6px" }}
+                      style={{ borderRadius: 10, textAlign: "center", padding: "8px 4px" }}
                       onClick={() => { setExportFormat('story'); playSound('click', soundEnabled); }}
                     >
-                      <Smartphone size={14} style={{ verticalAlign: "-2px" }} /> Story (9:16)
+                      <Smartphone size={12} style={{ verticalAlign: "-1px" }} /> Story 9:16
                     </button>
                     <button
                       className={`step-pill ${exportFormat === 'standard' ? 'active' : 'inactive'}`}
-                      style={{ borderRadius: 12, textAlign: "center", padding: "10px 6px" }}
+                      style={{ borderRadius: 10, textAlign: "center", padding: "8px 4px" }}
                       onClick={() => { setExportFormat('standard'); playSound('click', soundEnabled); }}
                     >
-                      <Download size={14} style={{ verticalAlign: "-2px" }} /> Standard PNG
+                      <Download size={12} style={{ verticalAlign: "-1px" }} /> Standard
                     </button>
                   </div>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {/* Download Real PNG file */}
                   <button className="btn-glow btn-primary" onClick={downloadCard} style={{ width: "100%" }}>
-                    <Download size={18} /> DOWNLOAD {exportFormat.toUpperCase()} PASS
+                    <Download size={16} /> DOWNLOAD REAL IMAGE FILE (.PNG)
                   </button>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                    <button className="btn-glow btn-secondary" onClick={copyToClipboard}>
-                      {copied ? <Check size={16} color="#38EFAC" /> : <Copy size={16} />}
-                      {copied ? "COPIED!" : "COPY IMAGE"}
+                  {/* Native Mobile Share sheet / Twitter fallback with #FrameInGoa */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <button className="btn-glow btn-secondary" onClick={shareNativeOrSocial}>
+                      <Share2 size={15} color={themeStyles.accent} /> SHARE #FrameInGoa
                     </button>
-                    <button className="btn-glow btn-secondary" onClick={shareX}>
-                      <Sparkles size={16} /> SHARE ON X
+                    <button className="btn-glow btn-secondary" onClick={copyToClipboard}>
+                      {copied ? <Check size={15} color="#38EFAC" /> : <Copy size={15} />}
+                      {copied ? "COPIED!" : "COPY IMAGE"}
                     </button>
                   </div>
 
-                  <button className="btn-glow btn-secondary" style={{ marginTop: 8 }} onClick={() => setStep("template")}>
+                  <button className="btn-glow btn-secondary" style={{ marginTop: 4 }} onClick={() => setStep("template")}>
                     <RefreshCw size={14} /> Change Template / Edit
                   </button>
                 </div>
@@ -1550,64 +1642,6 @@ export default function App() {
             )}
 
           </div>
-
-          {/* Right Column: 3D Interactive Parallax Tilt Preview */}
-          {step !== "welcome" && (
-            <div style={{ position: "sticky", top: 24 }}>
-              <div className="glass-panel" style={{ padding: 20, textAlign: "center" }}>
-                <div style={{
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  marginBottom: 14, padding: "0 6px"
-                }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: themeStyles.accent, letterSpacing: "0.08em", display: "flex", alignItems: "center", gap: 6 }}>
-                    <Move size={14} /> 3D PARALLAX PREVIEW
-                  </div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: "'Space Mono', monospace" }}>
-                    ID: {idCode}
-                  </div>
-                </div>
-
-                {/* 3D Tilt Container */}
-                <div
-                  onMouseMove={handleMouseMove}
-                  onMouseLeave={handleMouseLeave}
-                  style={{
-                    perspective: 1000,
-                    transformStyle: "preserve-3d",
-                    cursor: "pointer"
-                  }}
-                >
-                  <div style={{
-                    transform: `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg) scale3d(1.02, 1.02, 1.02)`,
-                    transition: tilt.active ? "transform 0.08s ease-out" : "transform 0.5s ease-out",
-                    position: "relative",
-                    borderRadius: 20,
-                    overflow: "hidden",
-                    boxShadow: tilt.active
-                      ? `0 25px 50px rgba(0,0,0,0.6), 0 0 30px ${themeStyles.glow}`
-                      : "0 15px 35px rgba(0,0,0,0.5)",
-                    border: `1px solid ${themeStyles.border}`
-                  }}>
-                    <canvas ref={liveCanvasRef} style={{ width: "100%", height: "auto", display: "block" }} />
-                    <canvas ref={canvasRef} style={{ display: "none" }} />
-
-                    {/* Specular Shimmer Layer */}
-                    {tilt.active && (
-                      <div style={{
-                        position: "absolute", inset: 0, pointerEvents: "none",
-                        background: `radial-gradient(circle at ${tilt.px}% ${tilt.py}%, rgba(255,255,255,0.3) 0%, transparent 60%)`,
-                        mixBlendMode: "overlay"
-                      }} />
-                    )}
-                  </div>
-                </div>
-
-                <div style={{ marginTop: 14, fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
-                  ✨ Hover & move your cursor over the pass to experience 3D tilt & specular shimmer!
-                </div>
-              </div>
-            </div>
-          )}
 
         </div>
       </div>
@@ -1617,7 +1651,7 @@ export default function App() {
 
 function NavRow({ onBack, onNext, nextDisabled }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 28 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 24 }}>
       <button className="btn-glow btn-secondary" onClick={onBack}>
         <ArrowLeft size={14} /> Back
       </button>
