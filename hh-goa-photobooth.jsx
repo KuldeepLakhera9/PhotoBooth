@@ -6,7 +6,7 @@ import {
   Layers, Eye, Monitor
 } from "lucide-react";
 
-const FONT_IMPORT = `@import url('https://fonts.googleapis.com/css2?family=Imbue:opsz,wght@10..120,400;700;900&family=Victor+Mono:wght@500;700;800&family=Archivo+Black&family=Outfit:wght@400;600;700;800&family=Space+Grotesk:wght@500;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');`;
+const FONT_IMPORT = `@import url('https://fonts.googleapis.com/css2?family=Imbue:opsz,wght@10..120,400;700;900&family=Rozha+One&family=Victor+Mono:wght@500;700;800&family=Archivo+Black&family=Outfit:wght@400;600;700;800&family=Space+Grotesk:wght@500;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');`;
 
 const FILTERS = [
   { id: "normal", label: "Normal" },
@@ -18,7 +18,7 @@ const FILTERS = [
 ];
 
 const FRAMES = [
-  { id: "frame1", label: "1", name: "VIP LANYARD PASS" },
+  { id: "frame1", label: "1", name: "HACKER गोवा HOUSE" },
   { id: "frame2", label: "2", name: "CREATIVE LICENSE" },
   { id: "frame3", label: "3", name: "CYBER TERMINAL" },
   { id: "frame4", label: "4", name: "GOA SUNSET CLUB" },
@@ -56,18 +56,18 @@ function applyCanvasFilter(ctx, filterId, px, py, pw, ph) {
   } else if (filterId === "dualtone") {
     for (let i = 0; i < data.length; i += 4) {
       const lum = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114) / 255;
-      data[i] = Math.floor(11 + (254 - 11) * lum);
-      data[i + 1] = Math.floor(104 + (225 - 104) * lum);
-      data[i + 2] = Math.floor(57 + (1 - 57) * lum);
+      data[i] = Math.floor(15 + (254 - 15) * lum);
+      data[i + 1] = Math.floor(117 + (225 - 117) * lum);
+      data[i + 2] = Math.floor(71 + (1 - 71) * lum);
     }
     ctx.putImageData(imgData, px, py);
   } else if (filterId === "dither") {
     for (let i = 0; i < data.length; i += 4) {
       const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
       const v = avg > 128 ? 255 : 0;
-      data[i] = v === 255 ? 255 : 11;
-      data[i + 1] = v === 255 ? 251 : 104;
-      data[i + 2] = v === 255 ? 232 : 57;
+      data[i] = v === 255 ? 254 : 15;
+      data[i + 1] = v === 255 ? 225 : 117;
+      data[i + 2] = v === 255 ? 1 : 71;
     }
     ctx.putImageData(imgData, px, py);
   } else if (filterId === "pixelate") {
@@ -81,7 +81,7 @@ function applyCanvasFilter(ctx, filterId, px, py, pw, ph) {
       }
     }
   } else if (filterId === "ascii") {
-    ctx.fillStyle = "rgba(11, 104, 57, 0.9)";
+    ctx.fillStyle = "rgba(15, 117, 71, 0.9)";
     ctx.fillRect(px, py, pw, ph);
     ctx.fillStyle = "#FEE101";
     ctx.font = "700 10px 'Victor Mono', monospace";
@@ -139,7 +139,7 @@ function drawStar(ctx, cx, cy, r, color, rot = 0) {
   ctx.restore();
 }
 
-function drawBarcode(ctx, x, y, w, h, color = "#0B6839") {
+function drawBarcode(ctx, x, y, w, h, color = "#0F7547") {
   ctx.save();
   ctx.fillStyle = color;
   let cx = x;
@@ -166,7 +166,6 @@ function drawRoundedRect(ctx, x, y, w, h, r) {
 // Lanyard Punch Slot Hole
 function drawLanyardSlot(ctx, cx, cy) {
   ctx.save();
-  // Outer punch oval slot
   ctx.beginPath();
   ctx.ellipse(cx, cy, 32, 10, 0, 0, Math.PI * 2);
   ctx.fillStyle = "#1A1A1A";
@@ -175,7 +174,6 @@ function drawLanyardSlot(ctx, cx, cy) {
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Metal rivet ring
   ctx.beginPath();
   ctx.ellipse(cx, cy, 34, 12, 0, 0, Math.PI * 2);
   ctx.strokeStyle = "#CBD5E1";
@@ -184,62 +182,93 @@ function drawLanyardSlot(ctx, cx, cy) {
   ctx.restore();
 }
 
-// Master Renderer for Card Front
+// Sunburst Rays background illustration matching screenshot #2
+function drawSunburst(ctx, cx, cy, r, rays = 12, color = "rgba(254, 225, 1, 0.35)") {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
+  for (let i = 0; i < rays; i++) {
+    const angle = (Math.PI / (rays - 1)) * i;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(angle) * 40, cy - Math.sin(angle) * 40);
+    ctx.lineTo(cx + Math.cos(angle) * r, cy - Math.sin(angle) * r);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// Master Renderer for Card Front matching Screenshot 1 & 2
 function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
   ctx.clearRect(0, 0, CARD_W, CARD_H);
 
-  // Background base
-  const bg = ctx.createLinearGradient(0, 0, CARD_W, CARD_H);
-  bg.addColorStop(0, "#0B6839");
-  bg.addColorStop(1, "#084E2A");
-  ctx.fillStyle = bg;
+  // Background matching exact HH Goa Green (#0F7547)
+  ctx.fillStyle = "#0F7547";
   ctx.fillRect(0, 0, CARD_W, CARD_H);
 
-  // Dots matrix pattern matching hhgoa.com
-  ctx.fillStyle = "rgba(254, 225, 1, 0.12)";
-  for (let x = 0; x < CARD_W; x += 24) {
-    for (let y = 0; y < CARD_H; y += 24) {
-      ctx.fillRect(x, y, 2, 2);
-    }
-  }
+  // Sunburst rays illustration from Screenshot 2
+  drawSunburst(ctx, CARD_W / 2, CARD_H + 100, 520, 16, "rgba(254, 225, 1, 0.22)");
 
   const cx = 35, cy = 35, cw = CARD_W - 70, ch = CARD_H - 70;
   drawRoundedRect(ctx, cx, cy, cw, ch, 24);
   ctx.fillStyle = "#FFFBE8";
   ctx.fill();
+  ctx.strokeStyle = "#0F7547";
+  ctx.lineWidth = 4;
+  ctx.stroke();
 
   // Top Punch Slot Hole for Lanyard Clip
   drawLanyardSlot(ctx, CARD_W / 2, cy + 22);
 
-  // Banner Header
+  // Header Banner matching Screenshot #1 (HACKER गोवा HOUSE)
   const headerY = cy + 42;
-  drawRoundedRect(ctx, cx, headerY, cw, 78, 16);
+  drawRoundedRect(ctx, cx, headerY, cw, 86, 16);
   ctx.save();
   ctx.clip();
-  ctx.fillStyle = "#0B6839";
-  ctx.fillRect(cx, headerY, cw * 0.68, 78);
-  ctx.fillStyle = "#FF0080";
-  ctx.fillRect(cx + cw * 0.68, headerY, cw * 0.32, 78);
-  ctx.fillStyle = "#FEE101";
-  ctx.fillRect(cx + cw * 0.68 - 3, headerY, 6, 78);
+  ctx.fillStyle = "#0F7547";
+  ctx.fillRect(cx, headerY, cw, 86);
   ctx.restore();
 
-  ctx.fillStyle = "#FFFBE8";
-  ctx.font = "900 34px 'Imbue', serif";
-  ctx.textBaseline = "middle";
-  ctx.fillText("HACKER HOUSE GOA 2026", cx + 28, headerY + 39);
+  // 2:47 PM STUDIO logo top left
+  ctx.fillStyle = "#FEE101";
+  ctx.font = "800 13px 'Victor Mono', monospace";
+  ctx.fillText("2:47 PM STUDIO", cx + 24, headerY + 22);
 
+  // HACKER गोवा HOUSE Header matching Screenshot #1
+  ctx.font = "900 48px 'Imbue', serif";
+  ctx.fillStyle = "#FEE101";
+  ctx.textBaseline = "middle";
+  ctx.fillText("HACKER", cx + 24, headerY + 54);
+
+  // Pink "गोवा" Devanagari badge
+  ctx.save();
+  ctx.translate(cx + 205, headerY + 38);
+  ctx.rotate(-0.06);
+  drawRoundedRect(ctx, 0, 0, 84, 34, 10);
+  ctx.fillStyle = "#FF0080";
+  ctx.fill();
+  ctx.font = "900 24px sans-serif";
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = "800 15px 'Victor Mono', monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("गोवा", 42, 22);
+  ctx.restore();
+
+  ctx.font = "900 48px 'Imbue', serif";
+  ctx.fillStyle = "#FEE101";
+  ctx.textAlign = "left";
+  ctx.fillText("HOUSE", cx + 300, headerY + 54);
+
+  ctx.fillStyle = "#FEE101";
+  ctx.font = "800 13px 'Victor Mono', monospace";
   ctx.textAlign = "right";
-  ctx.fillText("#FrameInGoa", cx + cw - 24, headerY + 39);
+  ctx.fillText("OCT 28–31 · 2026", cx + cw - 24, headerY + 22);
+  ctx.fillText("#FrameInGoa", cx + cw - 24, headerY + 54);
   ctx.textAlign = "left";
 
   // Photo Frame
-  const px = cx + 32, py = cy + 132, pw = 270, ph = 330;
+  const px = cx + 32, py = cy + 140, pw = 270, ph = 325;
   ctx.save();
   drawRoundedRect(ctx, px - 3, py - 3, pw + 6, ph + 6, 14);
-  ctx.fillStyle = "#0B6839";
+  ctx.fillStyle = "#0F7547";
   ctx.fill();
   ctx.restore();
 
@@ -252,64 +281,69 @@ function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
   } else {
     ctx.fillStyle = "#EAE3CD";
     ctx.fillRect(px, py, pw, ph);
+    ctx.font = "800 16px 'Victor Mono', monospace";
+    ctx.fillStyle = "#0F7547";
+    ctx.textAlign = "center";
+    ctx.fillText("UPLOAD YOUR PHOTO", px + pw / 2, py + ph / 2);
+    ctx.textAlign = "left";
   }
   ctx.restore();
 
   drawStar(ctx, px + 8, py + 12, 16, "#FEE101", -0.2);
 
-  // Profile Details
+  // Profile Details (Supports Empty State placeholders when not filled)
   const dx = px + pw + 40;
   let dy = py + 14;
 
-  ctx.fillStyle = "#0B6839";
+  ctx.fillStyle = "#0F7547";
   ctx.font = "800 13px 'Victor Mono', monospace";
   ctx.fillText("1. BUILDER NAME", dx, dy);
   ctx.font = "900 36px 'Archivo Black', sans-serif";
-  ctx.fillStyle = "#000000";
-  ctx.fillText((details.name || "KULDEEP LAKHERA").toUpperCase(), dx, dy + 38);
+  ctx.fillStyle = details.name ? "#000000" : "rgba(0,0,0,0.3)";
+  ctx.fillText((details.name || "YOUR NAME").toUpperCase(), dx, dy + 38);
 
   dy += 88;
-  ctx.fillStyle = "#0B6839";
+  ctx.fillStyle = "#0F7547";
   ctx.font = "800 13px 'Victor Mono', monospace";
   ctx.fillText("2. ROLE / TITLE", dx, dy);
   ctx.font = "800 24px 'Space Grotesk', sans-serif";
-  ctx.fillStyle = "#FF0080";
-  ctx.fillText((details.title || "FULL STACK DEVELOPER").toUpperCase(), dx, dy + 28);
+  ctx.fillStyle = details.title ? "#FF0080" : "rgba(255,0,128,0.4)";
+  ctx.fillText((details.title || "BUILDER / ROLE").toUpperCase(), dx, dy + 28);
 
   dy += 74;
-  ctx.fillStyle = "#0B6839";
+  ctx.fillStyle = "#0F7547";
   ctx.font = "800 13px 'Victor Mono', monospace";
   ctx.fillText("3. SOCIALS LINK", dx, dy);
   ctx.font = "700 17px 'Victor Mono', monospace";
-  ctx.fillStyle = "#0B6839";
-  ctx.fillText(details.social || "https://x.com/KuldeepLakhera9", dx, dy + 26);
+  ctx.fillStyle = details.social ? "#0F7547" : "rgba(15,117,71,0.4)";
+  ctx.fillText(details.social || "https://x.com/yourhandle", dx, dy + 26);
 
   dy += 70;
   ctx.font = "800 14px 'Victor Mono', monospace";
-  ctx.fillStyle = "#0B6839";
-  ctx.fillText("OCT 28–31 · 2026 · GOA, INDIA · 2:47 PM STUDIO", dx, dy + 24);
+  ctx.fillStyle = "#0F7547";
+  ctx.fillText("GOA, INDIA · 28 – 31 OCT 2026 · LESS NOISE. MORE SIGNAL.", dx, dy + 24);
 
   // Footer Barcode + ID
-  const fy = cy + ch - 60;
-  drawBarcode(ctx, cx + 32, fy, 240, 38, "#0B6839");
+  const fy = cy + ch - 58;
+  drawBarcode(ctx, cx + 32, fy, 240, 36, "#0F7547");
 
   ctx.font = "800 20px 'Victor Mono', monospace";
-  ctx.fillStyle = "#0B6839";
+  ctx.fillStyle = "#0F7547";
   ctx.textAlign = "right";
   ctx.fillText(idCode, cx + cw - 32, fy + 24);
   ctx.textAlign = "left";
 
-  // Stamp Badge
+  // Stamp Badge (#FrameInGoa)
   ctx.save();
   ctx.translate(cx + cw - 120, fy - 68);
   ctx.rotate(-0.2);
-  ctx.strokeStyle = "rgba(11,104,57,0.7)";
+  ctx.strokeStyle = "rgba(255,0,128,0.8)";
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.arc(0, 0, 48, 0, Math.PI * 2);
   ctx.stroke();
   ctx.font = "800 11px 'Victor Mono', monospace";
-  ctx.fillStyle = "rgba(11,104,57,0.85)";
+  ctx.fillStyle = "#FF0080";
   ctx.textAlign = "center";
   ctx.fillText("#FrameInGoa", 0, -6);
   ctx.fillText("VERIFIED 2026", 0, 10);
@@ -323,7 +357,7 @@ function renderCardBack(ctx, idCode) {
 
   const bg = ctx.createLinearGradient(0, 0, CARD_W, CARD_H);
   bg.addColorStop(0, "#084E2A");
-  bg.addColorStop(1, "#0B6839");
+  bg.addColorStop(1, "#0F7547");
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, CARD_W, CARD_H);
 
@@ -347,7 +381,7 @@ function renderCardBack(ctx, idCode) {
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(cx + 40, cy + 170, cw - 260, 50);
   ctx.font = "700 22px 'Caveat', cursive";
-  ctx.fillStyle = "#0B6839";
+  ctx.fillStyle = "#0F7547";
   ctx.fillText("Verified HH Goa Builder #FrameInGoa", cx + 60, cy + 202);
 
   ctx.fillStyle = "#EAE3CD";
@@ -356,7 +390,7 @@ function renderCardBack(ctx, idCode) {
   ctx.fillStyle = "#FF0080";
   ctx.fillText("CVC 2026", cx + cw - 180, cy + 202);
 
-  ctx.fillStyle = "#0B6839";
+  ctx.fillStyle = "#0F7547";
   ctx.font = "900 28px 'Imbue', serif";
   ctx.fillText("HACKER HOUSE GOA 2026", cx + 40, cy + 270);
 
@@ -366,7 +400,7 @@ function renderCardBack(ctx, idCode) {
   ctx.fillText("DATES: OCTOBER 28–31, 2026 · GOA, INDIA", cx + 40, cy + 325);
   ctx.fillText("HOST: 2:47 PM STUDIO · LESS NOISE. MORE SIGNAL.", cx + 40, cy + 350);
 
-  drawBarcode(ctx, cx + 40, cy + ch - 70, cw - 80, 40, "#0B6839");
+  drawBarcode(ctx, cx + 40, cy + ch - 70, cw - 80, 40, "#0F7547");
 
   ctx.font = "800 14px 'Victor Mono', monospace";
   ctx.fillStyle = "#FF0080";
@@ -376,9 +410,11 @@ function renderCardBack(ctx, idCode) {
 }
 
 export default function App() {
-  const [name, setName] = useState("Kuldeep Lakhera");
-  const [title, setTitle] = useState("Full Stack Developer");
-  const [social, setSocial] = useState("https://x.com/KuldeepLakhera9");
+  // Form fields start empty by default (no autofill as requested)
+  const [name, setName] = useState("");
+  const [title, setTitle] = useState("");
+  const [social, setSocial] = useState("");
+
   const [photoSrc, setPhotoSrc] = useState(SAMPLE_AVATARS[0].url);
   const [imgEl, setImgEl] = useState(null);
   const [frame, setFrame] = useState("frame1");
@@ -399,7 +435,7 @@ export default function App() {
   const canvasRef = useRef(null);
   const liveCanvasRef = useRef(null);
 
-  // Lanyard natural hanging pendulum oscillation loop
+  // Pendulum oscillation loop
   useEffect(() => {
     let frameId;
     let startTime = Date.now();
@@ -490,7 +526,7 @@ export default function App() {
     }
 
     const link = document.createElement("a");
-    link.download = `hh-goa-2026-pass-${(name || "kuldeep_lakhera").replace(/\s+/g, "_").toLowerCase()}.png`;
+    link.download = `hh-goa-2026-pass-${(name || "builder").replace(/\s+/g, "_").toLowerCase()}.png`;
     link.href = tempC.toDataURL("image/png");
     link.click();
   };
@@ -512,7 +548,6 @@ export default function App() {
     }
   };
 
-  // Calculate 3D Transform including pendulum sway
   const currentRotateX = viewMode === "3d" ? (tilt.active ? tilt.rx : 0) : 0;
   const currentRotateY = viewMode === "3d" ? (tilt.active ? tilt.ry : sway) : 0;
 
@@ -588,7 +623,7 @@ export default function App() {
       `}</style>
 
       <main style={{ maxWidth: 1140, margin: "0 auto", width: "100%", flex: 1 }}>
-        {/* Header */}
+        {/* Header matching hhgoa.com screenshot #1 */}
         <header style={{ width: "100%", marginBottom: 20 }}>
           <div style={{
             display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -597,7 +632,7 @@ export default function App() {
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={{
-                  background: "#FFFBE8", color: "#0B6839", padding: "6px 12px",
+                  background: "#FFFBE8", color: "#0F7547", padding: "6px 12px",
                   borderRadius: 6, fontWeight: 900, fontSize: 16, border: "2px solid #000"
                 }}>
                   HH GOA 2026
@@ -613,7 +648,7 @@ export default function App() {
 
             <div style={{ textAlign: "right" }}>
               <div style={{ color: "#FEE101", fontWeight: 800, fontSize: 13, letterSpacing: "0.08em" }}>
-                OCT 28–31 · 2026 · GOA
+                GOA, INDIA · 28 – 31 OCT 2026
               </div>
               <div style={{ color: "#FFFFFF", fontWeight: 800, fontSize: 12, letterSpacing: "0.08em" }}>
                 LESS NOISE. MORE SIGNAL
@@ -632,21 +667,21 @@ export default function App() {
             Hacker House Goa ID Card Generator
           </h1>
           <p style={{ color: "#FEE101", fontSize: 15, margin: "6px 0 0", maxWidth: 900, fontWeight: 700 }}>
-            Design your official 3D Hanging Lanyard HH Goa 2026 Builder Credential. Customize your name, stack, and photo to generate your shareable badge.
+            Design your own HH Goa 2026 themed photo frame generator. Upload your photo in the control panel below, choose your frame style, and generate your shareable credential.
           </p>
         </div>
 
         {/* Main Grid */}
         <div className="main-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28, alignItems: "start" }}>
           
-          {/* Left Column: Form Controls with Defaults: Kuldeep Lakhera, Full Stack Developer */}
+          {/* Left Column: Form Controls (Clean empty state by default) */}
           <div style={{
             background: "#FFFBE8", padding: 20, borderRadius: 12,
             boxShadow: "5px 5px 0px 0px #084e2a", color: "#000"
           }}>
             <h2 style={{
               fontFamily: "'Imbue', serif", fontSize: 20, fontWeight: 900,
-              color: "#0B6839", textTransform: "uppercase", borderBottom: "1px solid rgba(11,104,57,0.2)",
+              color: "#0F7547", textTransform: "uppercase", borderBottom: "1px solid rgba(15,117,71,0.2)",
               paddingBottom: 8, margin: "0 0 16px"
             }}>
               ADD YOUR DETAILS & PHOTO
@@ -655,12 +690,12 @@ export default function App() {
             <form style={{ display: "flex", flexDirection: "column", gap: 14 }} onSubmit={(e) => e.preventDefault()}>
               <div>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 900, textTransform: "uppercase", marginBottom: 4 }}>
-                  1. YOUR NAME <span style={{ color: "#0B6839" }}>*</span>
+                  1. YOUR NAME <span style={{ color: "#0F7547" }}>*</span>
                 </label>
                 <input
                   className="neo-input"
                   type="text"
-                  placeholder="e.g. Kuldeep Lakhera"
+                  placeholder="e.g. Ravi Kishan"
                   maxLength={30}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -669,12 +704,12 @@ export default function App() {
 
               <div>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 900, textTransform: "uppercase", marginBottom: 4 }}>
-                  2. ROLE / TITLE <span style={{ color: "#0B6839" }}>*</span>
+                  2. ROLE / TITLE <span style={{ color: "#0F7547" }}>*</span>
                 </label>
                 <input
                   className="neo-input"
                   type="text"
-                  placeholder="e.g. Full Stack Developer"
+                  placeholder="e.g. Creative Director"
                   maxLength={40}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -683,12 +718,12 @@ export default function App() {
 
               <div>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 900, textTransform: "uppercase", marginBottom: 4 }}>
-                  3. SOCIALS LINK <span style={{ color: "#0B6839" }}>*</span>
+                  3. SOCIALS LINK <span style={{ color: "#0F7547" }}>*</span>
                 </label>
                 <input
                   className="neo-input"
                   type="text"
-                  placeholder="e.g. https://x.com/KuldeepLakhera9"
+                  placeholder="e.g. https://x.com/BH4VE5H"
                   value={social}
                   onChange={(e) => setSocial(e.target.value)}
                 />
@@ -697,7 +732,7 @@ export default function App() {
               {/* Photo Upload */}
               <div>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 900, textTransform: "uppercase", marginBottom: 6 }}>
-                  4. PHOTO UPLOAD <span style={{ color: "#0B6839" }}>*</span>
+                  4. PHOTO UPLOAD <span style={{ color: "#0F7547" }}>*</span>
                 </label>
                 
                 <div
@@ -705,12 +740,12 @@ export default function App() {
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
                   style={{
-                    border: "2px dashed #0B6839", borderRadius: 10, background: "#FFFFFF",
+                    border: "2px dashed #0F7547", borderRadius: 10, background: "#FFFFFF",
                     padding: "14px", textAlign: "center", cursor: "pointer", marginBottom: 10
                   }}
                 >
-                  <Upload size={20} color="#0B6839" style={{ marginBottom: 4 }} />
-                  <div style={{ fontFamily: "'Imbue', serif", fontSize: 16, fontWeight: 900, color: "#0B6839", textTransform: "uppercase" }}>
+                  <Upload size={20} color="#0F7547" style={{ marginBottom: 4 }} />
+                  <div style={{ fontFamily: "'Imbue', serif", fontSize: 16, fontWeight: 900, color: "#0F7547", textTransform: "uppercase" }}>
                     CLICK OR DROP PHOTO HERE
                   </div>
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
@@ -731,11 +766,11 @@ export default function App() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 10 }}>
                   <div>
-                    <label style={{ fontSize: 9, fontWeight: 800, color: "#0B6839" }}>ZOOM ({zoom.toFixed(1)}x)</label>
+                    <label style={{ fontSize: 9, fontWeight: 800, color: "#0F7547" }}>ZOOM ({zoom.toFixed(1)}x)</label>
                     <input type="range" min="1" max="2" step="0.1" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: "100%" }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: 9, fontWeight: 800, color: "#0B6839" }}>SHIFT Y</label>
+                    <label style={{ fontSize: 9, fontWeight: 800, color: "#0F7547" }}>SHIFT Y</label>
                     <input type="range" min="-1" max="1" step="0.1" value={offsetY} onChange={(e) => setOffsetY(parseFloat(e.target.value))} style={{ width: "100%" }} />
                   </div>
                 </div>
@@ -794,7 +829,7 @@ export default function App() {
             </form>
           </div>
 
-          {/* Right Column: 3D Hanging Lanyard ID Card Preview */}
+          {/* Right Column: 3D Hanging Lanyard Card Stage */}
           <div style={{
             background: "#FFFBE8", padding: 20, borderRadius: 12,
             boxShadow: "7px 7px 0px 0px #084e2a", color: "#000"
@@ -842,30 +877,26 @@ export default function App() {
                 position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
                 width: 140, height: 60, zIndex: 10, pointerEvents: "none"
               }}>
-                {/* Left Strap */}
                 <div style={{
                   position: "absolute", top: -20, left: 35, width: 24, height: 70,
-                  background: "linear-gradient(90deg, #0B6839 0%, #124e3b 50%, #0B6839 100%)",
+                  background: "linear-gradient(90deg, #0F7547 0%, #154233 50%, #0F7547 100%)",
                   transform: "rotate(-18deg)", borderLeft: "1px solid #FEE101", borderRight: "1px solid #FEE101",
                   boxShadow: "0 4px 8px rgba(0,0,0,0.5)"
                 }} />
                 
-                {/* Right Strap */}
                 <div style={{
                   position: "absolute", top: -20, right: 35, width: 24, height: 70,
-                  background: "linear-gradient(90deg, #0B6839 0%, #124e3b 50%, #0B6839 100%)",
+                  background: "linear-gradient(90deg, #0F7547 0%, #154233 50%, #0F7547 100%)",
                   transform: "rotate(18deg)", borderLeft: "1px solid #FEE101", borderRight: "1px solid #FEE101",
                   boxShadow: "0 4px 8px rgba(0,0,0,0.5)"
                 }} />
 
-                {/* Metallic Swivel Clip Connector */}
                 <div style={{
                   position: "absolute", bottom: 2, left: "50%", transform: "translateX(-50%)",
                   width: 32, height: 26, background: "linear-gradient(180deg, #E2E8F0 0%, #94A3B8 100%)",
                   borderRadius: "4px 4px 10px 10px", border: "2px solid #1E293B",
                   boxShadow: "0 4px 8px rgba(0,0,0,0.6)"
                 }}>
-                  {/* Swivel Ring Hole */}
                   <div style={{
                     width: 12, height: 12, borderRadius: "50%", background: "#0F172A",
                     margin: "5px auto 0", border: "2px solid #CBD5E1"
@@ -873,7 +904,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 3D Hanging Card Physics Stage */}
+              {/* 3D Hanging Card Stage */}
               <div
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
@@ -892,13 +923,12 @@ export default function App() {
                   borderRadius: 14,
                   overflow: "hidden",
                   boxShadow: viewMode === "3d"
-                    ? `0 30px 60px rgba(0,0,0,0.7), 0 0 25px rgba(11,104,57,0.4)`
+                    ? `0 30px 60px rgba(0,0,0,0.7), 0 0 25px rgba(15,117,71,0.4)`
                     : "0 10px 25px rgba(0,0,0,0.4)"
                 }}>
                   <canvas ref={liveCanvasRef} style={{ width: "100%", height: "auto", display: "block" }} />
                   <canvas ref={canvasRef} style={{ display: "none" }} />
 
-                  {/* Specular Glossy Light Reflection */}
                   {viewMode === "3d" && tilt.active && (
                     <div style={{
                       position: "absolute", inset: 0, pointerEvents: "none",
@@ -963,7 +993,7 @@ export default function App() {
           </a>
         </div>
         <div style={{ color: "rgba(255,255,255,0.9)", fontWeight: 700 }}>
-          Built by <span style={{ color: "#FEE101" }}>Kuldeep Lakhera</span> for <span style={{ color: "#FEE101" }}>Hacker House Goa 2026</span> · 28 – 31 OCT 2026 · Goa, India
+          Built for <span style={{ color: "#FEE101" }}>Hacker House Goa 2026</span> · 28 – 31 OCT 2026 · Goa, India
         </div>
       </footer>
     </div>
