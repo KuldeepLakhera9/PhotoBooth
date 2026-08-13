@@ -535,7 +535,7 @@ export default function App() {
     const c = canvasRef.current || liveCanvasRef.current;
     if (!c) return;
 
-    const captionText = `I just generated my official HH Goa 2026 Builder Pass! 🌴🪪\n\nGenerate yours: https://hhg-id.vercel.app\n\n#FrameInGoa @247pmstudio @hhgoa`;
+    const captionText = `I just generated my official HH Goa 2026 Builder Pass! 🌴🪪\n\nGenerate yours: https://photobooth.kuldeeplakhera.me/\n\n#FrameInGoa @247pmstudio @hhgoa`;
 
     // 1. First trigger PNG image download so the user has the exact file ready
     downloadPNG();
@@ -562,11 +562,11 @@ export default function App() {
 
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText("https://hhg-id.vercel.app");
+      await navigator.clipboard.writeText("https://photobooth.kuldeeplakhera.me/");
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (e) {
-      alert("Link copied: https://hhg-id.vercel.app");
+      alert("Link copied: https://photobooth.kuldeeplakhera.me/");
     }
   };
 
