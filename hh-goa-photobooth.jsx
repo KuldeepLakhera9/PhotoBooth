@@ -56,18 +56,18 @@ function applyCanvasFilter(ctx, filterId, px, py, pw, ph) {
   } else if (filterId === "dualtone") {
     for (let i = 0; i < data.length; i += 4) {
       const lum = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114) / 255;
-      data[i] = Math.floor(15 + (254 - 15) * lum);
-      data[i + 1] = Math.floor(117 + (225 - 117) * lum);
-      data[i + 2] = Math.floor(71 + (1 - 71) * lum);
+      data[i] = Math.floor(0 + (255 - 0) * lum);
+      data[i + 1] = Math.floor(114 + (222 - 114) * lum);
+      data[i + 2] = Math.floor(56 + (0 - 56) * lum);
     }
     ctx.putImageData(imgData, px, py);
   } else if (filterId === "dither") {
     for (let i = 0; i < data.length; i += 4) {
       const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
       const v = avg > 128 ? 255 : 0;
-      data[i] = v === 255 ? 254 : 15;
-      data[i + 1] = v === 255 ? 225 : 117;
-      data[i + 2] = v === 255 ? 1 : 71;
+      data[i] = v === 255 ? 255 : 0;
+      data[i + 1] = v === 255 ? 222 : 114;
+      data[i + 2] = v === 255 ? 0 : 56;
     }
     ctx.putImageData(imgData, px, py);
   } else if (filterId === "pixelate") {
@@ -81,9 +81,9 @@ function applyCanvasFilter(ctx, filterId, px, py, pw, ph) {
       }
     }
   } else if (filterId === "ascii") {
-    ctx.fillStyle = "rgba(15, 117, 71, 0.9)";
+    ctx.fillStyle = "rgba(0, 114, 56, 0.9)";
     ctx.fillRect(px, py, pw, ph);
-    ctx.fillStyle = "#FEE101";
+    ctx.fillStyle = "#FFDE00";
     ctx.font = "700 10px 'Victor Mono', monospace";
     const chars = "01#GOA2026HH";
     for (let y = 0; y < ph; y += 12) {
@@ -139,7 +139,7 @@ function drawStar(ctx, cx, cy, r, color, rot = 0) {
   ctx.restore();
 }
 
-function drawBarcode(ctx, x, y, w, h, color = "#0F7547") {
+function drawBarcode(ctx, x, y, w, h, color = "#007238") {
   ctx.save();
   ctx.fillStyle = color;
   let cx = x;
@@ -182,93 +182,104 @@ function drawLanyardSlot(ctx, cx, cy) {
   ctx.restore();
 }
 
-// Sunburst Rays background illustration matching screenshot #2
-function drawSunburst(ctx, cx, cy, r, rays = 12, color = "rgba(254, 225, 1, 0.35)") {
+// Draw EXACT "HACKER गोवा HOUSE" Graphic from User Image
+function drawHackerHouseGoaBanner(ctx, x, y, w, h) {
   ctx.save();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 3;
-  for (let i = 0; i < rays; i++) {
-    const angle = (Math.PI / (rays - 1)) * i;
-    ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(angle) * 40, cy - Math.sin(angle) * 40);
-    ctx.lineTo(cx + Math.cos(angle) * r, cy - Math.sin(angle) * r);
-    ctx.stroke();
-  }
+  
+  // Green Banner Container (#007238)
+  drawRoundedRect(ctx, x, y, w, h, 16);
+  ctx.fillStyle = "#007238";
+  ctx.fill();
+
+  ctx.save();
+  ctx.clip();
+
+  // Draw HACKER in condensed tall yellow serif font
+  ctx.save();
+  ctx.translate(x + 28, y + h / 2 + 6);
+  ctx.scale(0.88, 1.4);
+  ctx.font = "900 68px 'Imbue', 'Georgia', serif";
+  ctx.fillStyle = "#FFDE00";
+  ctx.textBaseline = "middle";
+  ctx.fillText("HACKER", 0, 0);
+  ctx.restore();
+
+  // Draw HOUSE in condensed tall yellow serif font
+  ctx.save();
+  ctx.translate(x + 475, y + h / 2 + 6);
+  ctx.scale(0.88, 1.4);
+  ctx.font = "900 68px 'Imbue', 'Georgia', serif";
+  ctx.fillStyle = "#FFDE00";
+  ctx.textBaseline = "middle";
+  ctx.fillText("HOUSE", 0, 0);
+  ctx.restore();
+
+  // Draw Hot Pink Devanagari "गोवा" Badge overlapping right in the middle
+  ctx.save();
+  ctx.translate(x + 400, y + h / 2 - 2);
+  ctx.rotate(-0.06);
+
+  // Badge background (Hot pink #FF007F with yellow #FFDE00 border)
+  drawRoundedRect(ctx, -55, -28, 110, 56, 16);
+  ctx.fillStyle = "#FF007F";
+  ctx.fill();
+  ctx.strokeStyle = "#FFDE00";
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  // Devanagari text "गोवा"
+  ctx.font = "900 38px 'Rozha One', 'Victor Mono', sans-serif";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+  ctx.shadowBlur = 4;
+  ctx.fillText("गोवा", 0, 2);
+  ctx.restore();
+
+  ctx.restore();
   ctx.restore();
 }
 
-// Master Renderer for Card Front matching Screenshot 1 & 2
+// Master Renderer for Card Front matching EXACT user image
 function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
   ctx.clearRect(0, 0, CARD_W, CARD_H);
 
-  // Background matching exact HH Goa Green (#0F7547)
-  ctx.fillStyle = "#0F7547";
+  // Background matching exact HH Goa Green (#007238)
+  ctx.fillStyle = "#007238";
   ctx.fillRect(0, 0, CARD_W, CARD_H);
 
-  // Sunburst rays illustration from Screenshot 2
-  drawSunburst(ctx, CARD_W / 2, CARD_H + 100, 520, 16, "rgba(254, 225, 1, 0.22)");
-
+  // Card Inner Body (#FFFBE8)
   const cx = 35, cy = 35, cw = CARD_W - 70, ch = CARD_H - 70;
   drawRoundedRect(ctx, cx, cy, cw, ch, 24);
   ctx.fillStyle = "#FFFBE8";
   ctx.fill();
-  ctx.strokeStyle = "#0F7547";
+  ctx.strokeStyle = "#007238";
   ctx.lineWidth = 4;
   ctx.stroke();
 
   // Top Punch Slot Hole for Lanyard Clip
   drawLanyardSlot(ctx, CARD_W / 2, cy + 22);
 
-  // Header Banner matching Screenshot #1 (HACKER गोवा HOUSE)
+  // Draw EXACT "HACKER गोवा HOUSE" Banner Header matching attached screenshot!
   const headerY = cy + 42;
-  drawRoundedRect(ctx, cx, headerY, cw, 86, 16);
-  ctx.save();
-  ctx.clip();
-  ctx.fillStyle = "#0F7547";
-  ctx.fillRect(cx, headerY, cw, 86);
-  ctx.restore();
+  const headerH = 110;
+  drawHackerHouseGoaBanner(ctx, cx, headerY, cw, headerH);
 
-  // 2:47 PM STUDIO logo top left
-  ctx.fillStyle = "#FEE101";
+  // Subtitle Date & Studio line underneath header
   ctx.font = "800 13px 'Victor Mono', monospace";
-  ctx.fillText("2:47 PM STUDIO", cx + 24, headerY + 22);
+  ctx.fillStyle = "#007238";
+  ctx.fillText("GOA, INDIA · 28 – 31 OCT 2026", cx + 24, headerY + headerH + 20);
 
-  // HACKER गोवा HOUSE Header matching Screenshot #1
-  ctx.font = "900 48px 'Imbue', serif";
-  ctx.fillStyle = "#FEE101";
-  ctx.textBaseline = "middle";
-  ctx.fillText("HACKER", cx + 24, headerY + 54);
-
-  // Pink "गोवा" Devanagari badge
-  ctx.save();
-  ctx.translate(cx + 205, headerY + 38);
-  ctx.rotate(-0.06);
-  drawRoundedRect(ctx, 0, 0, 84, 34, 10);
-  ctx.fillStyle = "#FF0080";
-  ctx.fill();
-  ctx.font = "900 24px sans-serif";
-  ctx.fillStyle = "#FFFFFF";
-  ctx.textAlign = "center";
-  ctx.fillText("गोवा", 42, 22);
-  ctx.restore();
-
-  ctx.font = "900 48px 'Imbue', serif";
-  ctx.fillStyle = "#FEE101";
-  ctx.textAlign = "left";
-  ctx.fillText("HOUSE", cx + 300, headerY + 54);
-
-  ctx.fillStyle = "#FEE101";
-  ctx.font = "800 13px 'Victor Mono', monospace";
   ctx.textAlign = "right";
-  ctx.fillText("OCT 28–31 · 2026", cx + cw - 24, headerY + 22);
-  ctx.fillText("#FrameInGoa", cx + cw - 24, headerY + 54);
+  ctx.fillText("2:47 PM STUDIO · #FrameInGoa", cx + cw - 24, headerY + headerH + 20);
   ctx.textAlign = "left";
 
   // Photo Frame
-  const px = cx + 32, py = cy + 140, pw = 270, ph = 325;
+  const px = cx + 32, py = cy + 185, pw = 270, ph = 295;
   ctx.save();
   drawRoundedRect(ctx, px - 3, py - 3, pw + 6, ph + 6, 14);
-  ctx.fillStyle = "#0F7547";
+  ctx.fillStyle = "#007238";
   ctx.fill();
   ctx.restore();
 
@@ -281,69 +292,69 @@ function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
   } else {
     ctx.fillStyle = "#EAE3CD";
     ctx.fillRect(px, py, pw, ph);
-    ctx.font = "800 16px 'Victor Mono', monospace";
-    ctx.fillStyle = "#0F7547";
+    ctx.font = "800 15px 'Victor Mono', monospace";
+    ctx.fillStyle = "#007238";
     ctx.textAlign = "center";
-    ctx.fillText("UPLOAD YOUR PHOTO", px + pw / 2, py + ph / 2);
+    ctx.fillText("UPLOAD PHOTO HERE", px + pw / 2, py + ph / 2);
     ctx.textAlign = "left";
   }
   ctx.restore();
 
-  drawStar(ctx, px + 8, py + 12, 16, "#FEE101", -0.2);
+  drawStar(ctx, px + 8, py + 12, 16, "#FFDE00", -0.2);
 
   // Profile Details (Supports Empty State placeholders when not filled)
   const dx = px + pw + 40;
   let dy = py + 14;
 
-  ctx.fillStyle = "#0F7547";
+  ctx.fillStyle = "#007238";
   ctx.font = "800 13px 'Victor Mono', monospace";
   ctx.fillText("1. BUILDER NAME", dx, dy);
   ctx.font = "900 36px 'Archivo Black', sans-serif";
   ctx.fillStyle = details.name ? "#000000" : "rgba(0,0,0,0.3)";
   ctx.fillText((details.name || "YOUR NAME").toUpperCase(), dx, dy + 38);
 
-  dy += 88;
-  ctx.fillStyle = "#0F7547";
+  dy += 82;
+  ctx.fillStyle = "#007238";
   ctx.font = "800 13px 'Victor Mono', monospace";
   ctx.fillText("2. ROLE / TITLE", dx, dy);
   ctx.font = "800 24px 'Space Grotesk', sans-serif";
-  ctx.fillStyle = details.title ? "#FF0080" : "rgba(255,0,128,0.4)";
+  ctx.fillStyle = details.title ? "#FF007F" : "rgba(255,0,127,0.4)";
   ctx.fillText((details.title || "BUILDER / ROLE").toUpperCase(), dx, dy + 28);
 
-  dy += 74;
-  ctx.fillStyle = "#0F7547";
+  dy += 70;
+  ctx.fillStyle = "#007238";
   ctx.font = "800 13px 'Victor Mono', monospace";
   ctx.fillText("3. SOCIALS LINK", dx, dy);
   ctx.font = "700 17px 'Victor Mono', monospace";
-  ctx.fillStyle = details.social ? "#0F7547" : "rgba(15,117,71,0.4)";
+  ctx.fillStyle = details.social ? "#007238" : "rgba(0,114,56,0.4)";
   ctx.fillText(details.social || "https://x.com/yourhandle", dx, dy + 26);
 
-  dy += 70;
-  ctx.font = "800 14px 'Victor Mono', monospace";
-  ctx.fillStyle = "#0F7547";
-  ctx.fillText("GOA, INDIA · 28 – 31 OCT 2026 · LESS NOISE. MORE SIGNAL.", dx, dy + 24);
+  dy += 64;
+  ctx.font = "800 13px 'Victor Mono', monospace";
+  ctx.fillStyle = "#007238";
+  ctx.fillText("LESS NOISE. MORE SIGNAL.", dx, dy + 22);
 
   // Footer Barcode + ID
-  const fy = cy + ch - 58;
-  drawBarcode(ctx, cx + 32, fy, 240, 36, "#0F7547");
+  const fy = cy + ch - 56;
+  drawBarcode(ctx, cx + 32, fy, 240, 36, "#007238");
 
   ctx.font = "800 20px 'Victor Mono', monospace";
-  ctx.fillStyle = "#0F7547";
+  ctx.fillStyle = "#007238";
   ctx.textAlign = "right";
   ctx.fillText(idCode, cx + cw - 32, fy + 24);
   ctx.textAlign = "left";
 
   // Stamp Badge (#FrameInGoa)
   ctx.save();
-  ctx.translate(cx + cw - 120, fy - 68);
+  ctx.translate(cx + cw - 120, fy - 64);
   ctx.rotate(-0.2);
-  ctx.strokeStyle = "rgba(255,0,128,0.8)";
+  ctx.strokeStyle = "rgba(255,0,127,0.85)";
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.arc(0, 0, 48, 0, Math.PI * 2);
+  ctx.arc(0, 0, 46, 0, Math.PI * 2);
   ctx.stroke();
   ctx.font = "800 11px 'Victor Mono', monospace";
-  ctx.fillStyle = "#FF0080";
+  ctx.fillStyle = "#FF007F";
   ctx.textAlign = "center";
   ctx.fillText("#FrameInGoa", 0, -6);
   ctx.fillText("VERIFIED 2026", 0, 10);
@@ -356,12 +367,12 @@ function renderCardBack(ctx, idCode) {
   ctx.clearRect(0, 0, CARD_W, CARD_H);
 
   const bg = ctx.createLinearGradient(0, 0, CARD_W, CARD_H);
-  bg.addColorStop(0, "#084E2A");
-  bg.addColorStop(1, "#0F7547");
+  bg.addColorStop(0, "#00582B");
+  bg.addColorStop(1, "#007238");
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, CARD_W, CARD_H);
 
-  ctx.fillStyle = "rgba(254, 225, 1, 0.15)";
+  ctx.fillStyle = "rgba(255, 222, 0, 0.15)";
   for (let x = 0; x < CARD_W; x += 24) {
     for (let y = 0; y < CARD_H; y += 24) {
       ctx.fillRect(x, y, 2, 2);
@@ -381,16 +392,16 @@ function renderCardBack(ctx, idCode) {
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(cx + 40, cy + 170, cw - 260, 50);
   ctx.font = "700 22px 'Caveat', cursive";
-  ctx.fillStyle = "#0F7547";
+  ctx.fillStyle = "#007238";
   ctx.fillText("Verified HH Goa Builder #FrameInGoa", cx + 60, cy + 202);
 
   ctx.fillStyle = "#EAE3CD";
   ctx.fillRect(cx + cw - 200, cy + 170, 160, 50);
   ctx.font = "800 18px 'Victor Mono', monospace";
-  ctx.fillStyle = "#FF0080";
+  ctx.fillStyle = "#FF007F";
   ctx.fillText("CVC 2026", cx + cw - 180, cy + 202);
 
-  ctx.fillStyle = "#0F7547";
+  ctx.fillStyle = "#007238";
   ctx.font = "900 28px 'Imbue', serif";
   ctx.fillText("HACKER HOUSE GOA 2026", cx + 40, cy + 270);
 
@@ -400,17 +411,17 @@ function renderCardBack(ctx, idCode) {
   ctx.fillText("DATES: OCTOBER 28–31, 2026 · GOA, INDIA", cx + 40, cy + 325);
   ctx.fillText("HOST: 2:47 PM STUDIO · LESS NOISE. MORE SIGNAL.", cx + 40, cy + 350);
 
-  drawBarcode(ctx, cx + 40, cy + ch - 70, cw - 80, 40, "#0F7547");
+  drawBarcode(ctx, cx + 40, cy + ch - 70, cw - 80, 40, "#007238");
 
   ctx.font = "800 14px 'Victor Mono', monospace";
-  ctx.fillStyle = "#FF0080";
+  ctx.fillStyle = "#FF007F";
   ctx.textAlign = "center";
   ctx.fillText(`BUILDER ID: ${idCode} · #FrameInGoa`, CARD_W / 2, cy + ch - 15);
   ctx.textAlign = "left";
 }
 
 export default function App() {
-  // Form fields start empty by default (no autofill as requested)
+  // Form fields start empty by default
   const [name, setName] = useState("");
   const [title, setTitle] = useState("");
   const [social, setSocial] = useState("");
@@ -576,7 +587,7 @@ export default function App() {
         }
         .neo-input:focus {
           outline: none;
-          border-color: #FF0080;
+          border-color: #FF007F;
         }
         .custom-btn {
           cursor: pointer;
@@ -596,14 +607,14 @@ export default function App() {
           transform: translateY(0);
         }
         .custom-btn-pink {
-          background: #FF0080;
+          background: #FF007F;
           color: #FFFFFF;
           border-color: #000;
         }
         .custom-btn-outline-pink {
           background: #FFFFFF;
-          color: #FF0080;
-          border-color: #FF0080;
+          color: #FF007F;
+          border-color: #FF007F;
         }
         .avatar-thumb {
           width: 48px;
@@ -613,7 +624,7 @@ export default function App() {
           cursor: pointer;
           border: 2px solid transparent;
         }
-        .avatar-thumb.active { border-color: #FF0080; }
+        .avatar-thumb.active { border-color: #FF007F; }
         
         @media (max-width: 768px) {
           .main-grid {
@@ -623,7 +634,7 @@ export default function App() {
       `}</style>
 
       <main style={{ maxWidth: 1140, margin: "0 auto", width: "100%", flex: 1 }}>
-        {/* Header matching hhgoa.com screenshot #1 */}
+        {/* Header */}
         <header style={{ width: "100%", marginBottom: 20 }}>
           <div style={{
             display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -632,13 +643,13 @@ export default function App() {
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={{
-                  background: "#FFFBE8", color: "#0F7547", padding: "6px 12px",
+                  background: "#FFFBE8", color: "#007238", padding: "6px 12px",
                   borderRadius: 6, fontWeight: 900, fontSize: 16, border: "2px solid #000"
                 }}>
                   HH GOA 2026
                 </div>
                 <div style={{
-                  background: "#FEE101", color: "#000", padding: "6px 12px",
+                  background: "#FFDE00", color: "#000", padding: "6px 12px",
                   borderRadius: 6, fontWeight: 900, fontSize: 13, border: "2px solid #000"
                 }}>
                   2:47 PM STUDIO
@@ -647,7 +658,7 @@ export default function App() {
             </div>
 
             <div style={{ textAlign: "right" }}>
-              <div style={{ color: "#FEE101", fontWeight: 800, fontSize: 13, letterSpacing: "0.08em" }}>
+              <div style={{ color: "#FFDE00", fontWeight: 800, fontSize: 13, letterSpacing: "0.08em" }}>
                 GOA, INDIA · 28 – 31 OCT 2026
               </div>
               <div style={{ color: "#FFFFFF", fontWeight: 800, fontSize: 12, letterSpacing: "0.08em" }}>
@@ -666,7 +677,7 @@ export default function App() {
           }}>
             Hacker House Goa ID Card Generator
           </h1>
-          <p style={{ color: "#FEE101", fontSize: 15, margin: "6px 0 0", maxWidth: 900, fontWeight: 700 }}>
+          <p style={{ color: "#FFDE00", fontSize: 15, margin: "6px 0 0", maxWidth: 900, fontWeight: 700 }}>
             Design your own HH Goa 2026 themed photo frame generator. Upload your photo in the control panel below, choose your frame style, and generate your shareable credential.
           </p>
         </div>
@@ -674,14 +685,14 @@ export default function App() {
         {/* Main Grid */}
         <div className="main-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28, alignItems: "start" }}>
           
-          {/* Left Column: Form Controls (Clean empty state by default) */}
+          {/* Left Column: Form Controls (Clean empty state) */}
           <div style={{
             background: "#FFFBE8", padding: 20, borderRadius: 12,
-            boxShadow: "5px 5px 0px 0px #084e2a", color: "#000"
+            boxShadow: "5px 5px 0px 0px #00582b", color: "#000"
           }}>
             <h2 style={{
               fontFamily: "'Imbue', serif", fontSize: 20, fontWeight: 900,
-              color: "#0F7547", textTransform: "uppercase", borderBottom: "1px solid rgba(15,117,71,0.2)",
+              color: "#007238", textTransform: "uppercase", borderBottom: "1px solid rgba(0,114,56,0.2)",
               paddingBottom: 8, margin: "0 0 16px"
             }}>
               ADD YOUR DETAILS & PHOTO
@@ -690,7 +701,7 @@ export default function App() {
             <form style={{ display: "flex", flexDirection: "column", gap: 14 }} onSubmit={(e) => e.preventDefault()}>
               <div>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 900, textTransform: "uppercase", marginBottom: 4 }}>
-                  1. YOUR NAME <span style={{ color: "#0F7547" }}>*</span>
+                  1. YOUR NAME <span style={{ color: "#007238" }}>*</span>
                 </label>
                 <input
                   className="neo-input"
@@ -704,7 +715,7 @@ export default function App() {
 
               <div>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 900, textTransform: "uppercase", marginBottom: 4 }}>
-                  2. ROLE / TITLE <span style={{ color: "#0F7547" }}>*</span>
+                  2. ROLE / TITLE <span style={{ color: "#007238" }}>*</span>
                 </label>
                 <input
                   className="neo-input"
@@ -718,7 +729,7 @@ export default function App() {
 
               <div>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 900, textTransform: "uppercase", marginBottom: 4 }}>
-                  3. SOCIALS LINK <span style={{ color: "#0F7547" }}>*</span>
+                  3. SOCIALS LINK <span style={{ color: "#007238" }}>*</span>
                 </label>
                 <input
                   className="neo-input"
@@ -732,7 +743,7 @@ export default function App() {
               {/* Photo Upload */}
               <div>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 900, textTransform: "uppercase", marginBottom: 6 }}>
-                  4. PHOTO UPLOAD <span style={{ color: "#0F7547" }}>*</span>
+                  4. PHOTO UPLOAD <span style={{ color: "#007238" }}>*</span>
                 </label>
                 
                 <div
@@ -740,12 +751,12 @@ export default function App() {
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
                   style={{
-                    border: "2px dashed #0F7547", borderRadius: 10, background: "#FFFFFF",
+                    border: "2px dashed #007238", borderRadius: 10, background: "#FFFFFF",
                     padding: "14px", textAlign: "center", cursor: "pointer", marginBottom: 10
                   }}
                 >
-                  <Upload size={20} color="#0F7547" style={{ marginBottom: 4 }} />
-                  <div style={{ fontFamily: "'Imbue', serif", fontSize: 16, fontWeight: 900, color: "#0F7547", textTransform: "uppercase" }}>
+                  <Upload size={20} color="#007238" style={{ marginBottom: 4 }} />
+                  <div style={{ fontFamily: "'Imbue', serif", fontSize: 16, fontWeight: 900, color: "#007238", textTransform: "uppercase" }}>
                     CLICK OR DROP PHOTO HERE
                   </div>
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
@@ -766,11 +777,11 @@ export default function App() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 10 }}>
                   <div>
-                    <label style={{ fontSize: 9, fontWeight: 800, color: "#0F7547" }}>ZOOM ({zoom.toFixed(1)}x)</label>
+                    <label style={{ fontSize: 9, fontWeight: 800, color: "#007238" }}>ZOOM ({zoom.toFixed(1)}x)</label>
                     <input type="range" min="1" max="2" step="0.1" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} style={{ width: "100%" }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: 9, fontWeight: 800, color: "#0F7547" }}>SHIFT Y</label>
+                    <label style={{ fontSize: 9, fontWeight: 800, color: "#007238" }}>SHIFT Y</label>
                     <input type="range" min="-1" max="1" step="0.1" value={offsetY} onChange={(e) => setOffsetY(parseFloat(e.target.value))} style={{ width: "100%" }} />
                   </div>
                 </div>
@@ -829,10 +840,10 @@ export default function App() {
             </form>
           </div>
 
-          {/* Right Column: 3D Hanging Lanyard Card Stage */}
+          {/* Right Column: 3D Hanging Lanyard Stage */}
           <div style={{
             background: "#FFFBE8", padding: 20, borderRadius: 12,
-            boxShadow: "7px 7px 0px 0px #084e2a", color: "#000"
+            boxShadow: "7px 7px 0px 0px #00582b", color: "#000"
           }}>
             {/* View Mode & Flip Toggle */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
@@ -867,27 +878,27 @@ export default function App() {
 
             {/* 3D Hanging Lanyard Stage Container */}
             <div style={{
-              background: "radial-gradient(circle, #154233 0%, #05130E 100%)",
+              background: "radial-gradient(circle, #007238 0%, #003D1F 100%)",
               border: "2px solid #000", borderRadius: 16,
               padding: "50px 12px 20px", position: "relative", overflow: "hidden", minHeight: 380
             }}>
               
-              {/* Lanyard Fabric Straps hanging from top neck anchor */}
+              {/* Lanyard Fabric Straps */}
               <div style={{
                 position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
                 width: 140, height: 60, zIndex: 10, pointerEvents: "none"
               }}>
                 <div style={{
                   position: "absolute", top: -20, left: 35, width: 24, height: 70,
-                  background: "linear-gradient(90deg, #0F7547 0%, #154233 50%, #0F7547 100%)",
-                  transform: "rotate(-18deg)", borderLeft: "1px solid #FEE101", borderRight: "1px solid #FEE101",
+                  background: "linear-gradient(90deg, #007238 0%, #00582B 50%, #007238 100%)",
+                  transform: "rotate(-18deg)", borderLeft: "1px solid #FFDE00", borderRight: "1px solid #FFDE00",
                   boxShadow: "0 4px 8px rgba(0,0,0,0.5)"
                 }} />
                 
                 <div style={{
                   position: "absolute", top: -20, right: 35, width: 24, height: 70,
-                  background: "linear-gradient(90deg, #0F7547 0%, #154233 50%, #0F7547 100%)",
-                  transform: "rotate(18deg)", borderLeft: "1px solid #FEE101", borderRight: "1px solid #FEE101",
+                  background: "linear-gradient(90deg, #007238 0%, #00582B 50%, #007238 100%)",
+                  transform: "rotate(18deg)", borderLeft: "1px solid #FFDE00", borderRight: "1px solid #FFDE00",
                   boxShadow: "0 4px 8px rgba(0,0,0,0.5)"
                 }} />
 
@@ -904,7 +915,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 3D Hanging Card Stage */}
+              {/* 3D Stage */}
               <div
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
@@ -923,7 +934,7 @@ export default function App() {
                   borderRadius: 14,
                   overflow: "hidden",
                   boxShadow: viewMode === "3d"
-                    ? `0 30px 60px rgba(0,0,0,0.7), 0 0 25px rgba(15,117,71,0.4)`
+                    ? `0 30px 60px rgba(0,0,0,0.7), 0 0 25px rgba(0,114,56,0.4)`
                     : "0 10px 25px rgba(0,0,0,0.4)"
                 }}>
                   <canvas ref={liveCanvasRef} style={{ width: "100%", height: "auto", display: "block" }} />
@@ -940,7 +951,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Export & Share Controls */}
+            {/* Export Controls */}
             <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 <button
@@ -976,24 +987,24 @@ export default function App() {
         </div>
       </main>
 
-      {/* Footer matching hhgoa.com */}
+      {/* Footer */}
       <footer style={{
         marginTop: 40, paddingTop: 16, borderTop: "2px solid rgba(255,255,255,0.3)",
         textAlign: "center", fontSize: 13
       }}>
         <div style={{ display: "flex", justifyContent: "center", gap: 20, marginBottom: 8, fontWeight: 700 }}>
-          <a href="https://hhgoa.com/" target="_blank" rel="noopener noreferrer" style={{ color: "#FEE101", textDecoration: "none" }}>
+          <a href="https://hhgoa.com/" target="_blank" rel="noopener noreferrer" style={{ color: "#FFDE00", textDecoration: "none" }}>
             Official Website ↗
           </a>
-          <a href="https://hhgoa.com/#check-hype" target="_blank" rel="noopener noreferrer" style={{ color: "#FEE101", textDecoration: "none" }}>
+          <a href="https://hhgoa.com/#check-hype" target="_blank" rel="noopener noreferrer" style={{ color: "#FFDE00", textDecoration: "none" }}>
             Event Details ↗
           </a>
-          <a href="https://hacker-house-goa-2026.devfolio.co/" target="_blank" rel="noopener noreferrer" style={{ color: "#FEE101", textDecoration: "none" }}>
+          <a href="https://hacker-house-goa-2026.devfolio.co/" target="_blank" rel="noopener noreferrer" style={{ color: "#FFDE00", textDecoration: "none" }}>
             Devfolio Apply ↗
           </a>
         </div>
         <div style={{ color: "rgba(255,255,255,0.9)", fontWeight: 700 }}>
-          Built for <span style={{ color: "#FEE101" }}>Hacker House Goa 2026</span> · 28 – 31 OCT 2026 · Goa, India
+          Built for <span style={{ color: "#FFDE00" }}>Hacker House Goa 2026</span> · 28 – 31 OCT 2026 · Goa, India
         </div>
       </footer>
     </div>
