@@ -18,11 +18,11 @@ const FILTERS = [
 ];
 
 const FRAMES = [
-  { id: "none", label: "None", name: "MINIMAL BADGE" },
-  { id: "frame1", label: "1", name: "VIP BUILDER PASS" },
+  { id: "frame1", label: "1", name: "VIP LANYARD PASS" },
   { id: "frame2", label: "2", name: "CREATIVE LICENSE" },
   { id: "frame3", label: "3", name: "CYBER TERMINAL" },
   { id: "frame4", label: "4", name: "GOA SUNSET CLUB" },
+  { id: "none", label: "None", name: "MINIMAL BADGE" },
 ];
 
 const SAMPLE_AVATARS = [
@@ -39,7 +39,6 @@ function randomId() {
   return "HH26-" + Math.random().toString(36).slice(2, 6).toUpperCase();
 }
 
-// Canvas Image Filter Effect Pipeline
 function applyCanvasFilter(ctx, filterId, px, py, pw, ph) {
   if (filterId === "normal") return;
 
@@ -55,16 +54,14 @@ function applyCanvasFilter(ctx, filterId, px, py, pw, ph) {
     }
     ctx.putImageData(imgData, px, py);
   } else if (filterId === "dualtone") {
-    // HH Goa Green (#0B6839) & Cyber Yellow (#FEE101) map
     for (let i = 0; i < data.length; i += 4) {
       const lum = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114) / 255;
-      data[i] = Math.floor(11 + (254 - 11) * lum);      // Red
-      data[i + 1] = Math.floor(104 + (225 - 104) * lum); // Green
-      data[i + 2] = Math.floor(57 + (1 - 57) * lum);     // Blue
+      data[i] = Math.floor(11 + (254 - 11) * lum);
+      data[i + 1] = Math.floor(104 + (225 - 104) * lum);
+      data[i + 2] = Math.floor(57 + (1 - 57) * lum);
     }
     ctx.putImageData(imgData, px, py);
   } else if (filterId === "dither") {
-    // Retro dither thresholding
     for (let i = 0; i < data.length; i += 4) {
       const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
       const v = avg > 128 ? 255 : 0;
@@ -84,7 +81,6 @@ function applyCanvasFilter(ctx, filterId, px, py, pw, ph) {
       }
     }
   } else if (filterId === "ascii") {
-    // Matrix ASCII Overlay
     ctx.fillStyle = "rgba(11, 104, 57, 0.9)";
     ctx.fillRect(px, py, pw, ph);
     ctx.fillStyle = "#FEE101";
@@ -99,7 +95,6 @@ function applyCanvasFilter(ctx, filterId, px, py, pw, ph) {
   }
 }
 
-// Cover fit algorithm for any photo aspect ratio
 function drawImageCover(ctx, img, x, y, w, h, zoom = 1, offsetX = 0, offsetY = 0) {
   if (!img) return;
   const imgW = img.naturalWidth || img.width;
@@ -168,248 +163,39 @@ function drawRoundedRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-  const words = String(text).split(" ");
-  let line = "";
-  let cy = y;
-  for (let n = 0; n < words.length; n++) {
-    const testLine = line + words[n] + " ";
-    if (ctx.measureText(testLine).width > maxWidth && n > 0) {
-      ctx.fillText(line, x, cy);
-      line = words[n] + " ";
-      cy += lineHeight;
-    } else {
-      line = testLine;
-    }
-  }
-  ctx.fillText(line, x, cy);
+// Lanyard Punch Slot Hole
+function drawLanyardSlot(ctx, cx, cy) {
+  ctx.save();
+  // Outer punch oval slot
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 32, 10, 0, 0, Math.PI * 2);
+  ctx.fillStyle = "#1A1A1A";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Metal rivet ring
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 34, 12, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = "#CBD5E1";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.restore();
 }
 
 // Master Renderer for Card Front
 function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
   ctx.clearRect(0, 0, CARD_W, CARD_H);
 
-  if (frameId === "frame2") { // Creative License
-    ctx.fillStyle = "#0D1117";
-    ctx.fillRect(0, 0, CARD_W, CARD_H);
-
-    const cx = 50, cy = 45, cw = CARD_W - 100, ch = CARD_H - 90;
-    drawRoundedRect(ctx, cx, cy, cw, ch, 14);
-    ctx.fillStyle = "#FFFBE8";
-    ctx.fill();
-    ctx.strokeStyle = "#0B6839";
-    ctx.lineWidth = 4;
-    ctx.stroke();
-
-    // Header
-    ctx.fillStyle = "#0B6839";
-    ctx.font = "900 32px 'Imbue', serif";
-    ctx.fillText("HACKER HOUSE GOA · CREATIVE LICENSE", cx + 230, cy + 50);
-    ctx.font = "700 14px 'Victor Mono', monospace";
-    ctx.fillStyle = "#FF0080";
-    ctx.fillText("#FrameInGoa · OCT 28-31 2026", cx + 230, cy + 78);
-
-    ctx.textAlign = "right";
-    ctx.font = "800 24px 'Victor Mono', monospace";
-    ctx.fillStyle = "#0B6839";
-    ctx.fillText(idCode, cx + cw - 30, cy + 55);
-    ctx.textAlign = "left";
-
-    // Polaroid Frame
-    const px = cx + 36, py = cy + 100, pw = 220, ph = 265;
-    ctx.fillStyle = "#FFFFFF";
-    ctx.shadowColor = "rgba(0,0,0,0.25)";
-    ctx.shadowBlur = 12;
-    ctx.fillRect(px, py, pw, ph + 34);
-    ctx.shadowBlur = 0;
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(px + 10, py + 10, pw - 20, ph - 20);
-    ctx.clip();
-    if (img) {
-      drawImageCover(ctx, img, px + 10, py + 10, pw - 20, ph - 20, details.zoom, details.offsetX, details.offsetY);
-      applyCanvasFilter(ctx, filterId, px + 10, py + 10, pw - 20, ph - 20);
-    } else {
-      ctx.fillStyle = "#E5E0D0";
-      ctx.fillRect(px + 10, py + 10, pw - 20, ph - 20);
-    }
-    ctx.restore();
-
-    // Details
-    const dx = px + pw + 44;
-    let dy = py + 10;
-    const field = (label, val) => {
-      ctx.font = "700 12px 'Victor Mono', monospace";
-      ctx.fillStyle = "#0B6839";
-      ctx.fillText(label, dx, dy);
-      ctx.font = "700 24px 'Caveat', cursive";
-      ctx.fillStyle = "#000000";
-      ctx.fillText(val || "-", dx, dy + 26);
-      dy += 62;
-    };
-    field("1. BUILDER NAME", details.name);
-    field("2. ROLE / CLASS", details.title);
-    field("3. SOCIAL HANDLE", details.social);
-
-    drawBarcode(ctx, cx + 36, cy + ch - 48, 220, 28, "#0B6839");
-    ctx.font = "700 13px 'Victor Mono', monospace";
-    ctx.fillStyle = "#FF0080";
-    ctx.fillText("LESS NOISE. MORE SIGNAL.", cx + cw - 260, cy + ch - 28);
-    return;
-  }
-
-  if (frameId === "frame3") { // Cyber Terminal
-    ctx.fillStyle = "#050B14";
-    ctx.fillRect(0, 0, CARD_W, CARD_H);
-
-    ctx.strokeStyle = "rgba(56, 239, 172, 0.12)";
-    for (let gx = 0; gx < CARD_W; gx += 32) {
-      ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, CARD_H); ctx.stroke();
-    }
-
-    const cx = 40, cy = 40, cw = CARD_W - 80, ch = CARD_H - 80;
-    drawRoundedRect(ctx, cx, cy, cw, ch, 16);
-    ctx.strokeStyle = "#38EFAC";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.font = "800 28px 'Victor Mono', monospace";
-    ctx.fillStyle = "#38EFAC";
-    ctx.fillText("HH.GOA // 2026", cx + 32, cy + 48);
-    ctx.textAlign = "right";
-    ctx.fillStyle = "#FEE101";
-    ctx.font = "700 16px 'Victor Mono', monospace";
-    ctx.fillText("SYS.STATUS: ONLINE", cx + cw - 32, cy + 48);
-    ctx.textAlign = "left";
-
-    const px = cx + 32, py = cy + 80, pw = 260, ph = 320;
-    drawRoundedRect(ctx, px, py, pw, ph, 8);
-    ctx.save();
-    ctx.clip();
-    if (img) {
-      drawImageCover(ctx, img, px, py, pw, ph, details.zoom, details.offsetX, details.offsetY);
-      applyCanvasFilter(ctx, filterId, px, py, pw, ph);
-    } else {
-      ctx.fillStyle = "#111827";
-      ctx.fillRect(px, py, pw, ph);
-    }
-    ctx.restore();
-
-    ctx.strokeStyle = "#38EFAC";
-    ctx.lineWidth = 2;
-    drawRoundedRect(ctx, px, py, pw, ph, 8);
-    ctx.stroke();
-
-    const dx = px + pw + 40;
-    let dy = py + 14;
-    const row = (lbl, val, color = "#FFFFFF") => {
-      ctx.font = "700 12px 'Victor Mono', monospace";
-      ctx.fillStyle = "#38EFAC";
-      ctx.fillText(lbl, dx, dy);
-      ctx.font = "700 24px 'Space Grotesk', sans-serif";
-      ctx.fillStyle = color;
-      ctx.fillText(val || "-", dx, dy + 28);
-      dy += 68;
-    };
-
-    row("1. OPERATOR", (details.name || "UNNAMED").toUpperCase());
-    row("2. DESIGNATION", (details.title || "BUILDER").toUpperCase(), "#FEE101");
-    row("3. SOCIAL LINK", details.social || "-", "#38EFAC");
-
-    const fy = cy + ch - 54;
-    ctx.font = "700 16px 'Victor Mono', monospace";
-    ctx.fillStyle = "#94A3B8";
-    ctx.fillText("UUID: " + idCode, cx + 32, fy);
-    drawBarcode(ctx, cx + 32, fy + 14, cw - 64, 26, "#38EFAC");
-    return;
-  }
-
-  if (frameId === "frame4") { // Goa Sunset
-    const bg = ctx.createLinearGradient(0, 0, CARD_W, CARD_H);
-    bg.addColorStop(0, "#2A0845");
-    bg.addColorStop(0.5, "#6441A5");
-    bg.addColorStop(1, "#FF512F");
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, CARD_W, CARD_H);
-
-    const cx = 40, cy = 40, cw = CARD_W - 80, ch = CARD_H - 80;
-    drawRoundedRect(ctx, cx, cy, cw, ch, 20);
-    ctx.strokeStyle = "#FEE101";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    drawRoundedRect(ctx, cx + 10, cy + 10, cw - 20, ch - 20, 16);
-    ctx.fillStyle = "rgba(15, 10, 25, 0.7)";
-    ctx.fill();
-
-    ctx.fillStyle = "#FEE101";
-    ctx.font = "800 32px 'Imbue', serif";
-    ctx.fillText("GOA SUNSET BUILDER CLUB · #FrameInGoa", cx + 32, cy + 50);
-
-    ctx.textAlign = "right";
-    ctx.font = "700 15px 'Victor Mono', monospace";
-    ctx.fillStyle = "#FF758C";
-    ctx.fillText("MEMBER #" + idCode, cx + cw - 32, cy + 50);
-    ctx.textAlign = "left";
-
-    const px = cx + 32, py = cy + 80, pw = 260, ph = 330;
-    drawRoundedRect(ctx, px, py, pw, ph, 12);
-    ctx.save();
-    ctx.clip();
-    if (img) {
-      drawImageCover(ctx, img, px, py, pw, ph, details.zoom, details.offsetX, details.offsetY);
-      applyCanvasFilter(ctx, filterId, px, py, pw, ph);
-    } else {
-      ctx.fillStyle = "#2D1B4E";
-      ctx.fillRect(px, py, pw, ph);
-    }
-    ctx.restore();
-
-    ctx.strokeStyle = "#FEE101";
-    ctx.lineWidth = 2;
-    drawRoundedRect(ctx, px, py, pw, ph, 12);
-    ctx.stroke();
-
-    const dx = px + pw + 40;
-    let dy = py + 14;
-
-    ctx.fillStyle = "#FEE101";
-    ctx.font = "700 12px 'Victor Mono', monospace";
-    ctx.fillText("BUILDER NAME", dx, dy);
-    ctx.font = "800 32px 'Outfit', sans-serif";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillText((details.name || "YOUR NAME").toUpperCase(), dx, dy + 36);
-
-    dy += 82;
-    ctx.fillStyle = "#FEE101";
-    ctx.font = "700 12px 'Victor Mono', monospace";
-    ctx.fillText("ROLE / TITLE", dx, dy);
-    ctx.font = "700 22px 'Space Grotesk', sans-serif";
-    ctx.fillStyle = "#FF758C";
-    ctx.fillText(details.title || "BUILDER", dx, dy + 28);
-
-    dy += 74;
-    ctx.fillStyle = "#FEE101";
-    ctx.font = "700 12px 'Victor Mono', monospace";
-    ctx.fillText("SOCIAL LINK", dx, dy);
-    ctx.font = "700 18px 'Victor Mono', monospace";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(details.social || "-", dx, dy + 26);
-
-    const fy = cy + ch - 54;
-    drawBarcode(ctx, cx + 32, fy, cw - 64, 28, "#FEE101");
-    return;
-  }
-
-  // Frame 1 / Default VIP BUILDER PASS (Matching HH Goa Official Brand)
+  // Background base
   const bg = ctx.createLinearGradient(0, 0, CARD_W, CARD_H);
   bg.addColorStop(0, "#0B6839");
   bg.addColorStop(1, "#084E2A");
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, CARD_W, CARD_H);
 
-  // Dots pattern
+  // Dots matrix pattern matching hhgoa.com
   ctx.fillStyle = "rgba(254, 225, 1, 0.12)";
   for (let x = 0; x < CARD_W; x += 24) {
     for (let y = 0; y < CARD_H; y += 24) {
@@ -422,31 +208,35 @@ function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
   ctx.fillStyle = "#FFFBE8";
   ctx.fill();
 
+  // Top Punch Slot Hole for Lanyard Clip
+  drawLanyardSlot(ctx, CARD_W / 2, cy + 22);
+
   // Banner Header
-  drawRoundedRect(ctx, cx, cy, cw, 80, 24);
+  const headerY = cy + 42;
+  drawRoundedRect(ctx, cx, headerY, cw, 78, 16);
   ctx.save();
   ctx.clip();
   ctx.fillStyle = "#0B6839";
-  ctx.fillRect(cx, cy, cw * 0.68, 80);
+  ctx.fillRect(cx, headerY, cw * 0.68, 78);
   ctx.fillStyle = "#FF0080";
-  ctx.fillRect(cx + cw * 0.68, cy, cw * 0.32, 80);
+  ctx.fillRect(cx + cw * 0.68, headerY, cw * 0.32, 78);
   ctx.fillStyle = "#FEE101";
-  ctx.fillRect(cx + cw * 0.68 - 3, cy, 6, 80);
+  ctx.fillRect(cx + cw * 0.68 - 3, headerY, 6, 78);
   ctx.restore();
 
   ctx.fillStyle = "#FFFBE8";
-  ctx.font = "900 36px 'Imbue', serif";
+  ctx.font = "900 34px 'Imbue', serif";
   ctx.textBaseline = "middle";
-  ctx.fillText("HACKER HOUSE GOA 2026", cx + 28, cy + 40);
+  ctx.fillText("HACKER HOUSE GOA 2026", cx + 28, headerY + 39);
 
   ctx.fillStyle = "#FFFFFF";
   ctx.font = "800 15px 'Victor Mono', monospace";
   ctx.textAlign = "right";
-  ctx.fillText("#FrameInGoa", cx + cw - 24, cy + 40);
+  ctx.fillText("#FrameInGoa", cx + cw - 24, headerY + 39);
   ctx.textAlign = "left";
 
-  // Photo Box
-  const px = cx + 32, py = cy + 104, pw = 270, ph = 340;
+  // Photo Frame
+  const px = cx + 32, py = cy + 132, pw = 270, ph = 330;
   ctx.save();
   drawRoundedRect(ctx, px - 3, py - 3, pw + 6, ph + 6, 14);
   ctx.fillStyle = "#0B6839";
@@ -467,7 +257,7 @@ function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
 
   drawStar(ctx, px + 8, py + 12, 16, "#FEE101", -0.2);
 
-  // Details
+  // Profile Details
   const dx = px + pw + 40;
   let dy = py + 14;
 
@@ -476,7 +266,7 @@ function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
   ctx.fillText("1. BUILDER NAME", dx, dy);
   ctx.font = "900 36px 'Archivo Black', sans-serif";
   ctx.fillStyle = "#000000";
-  ctx.fillText((details.name || "YOUR NAME").toUpperCase(), dx, dy + 38);
+  ctx.fillText((details.name || "KULDEEP LAKHERA").toUpperCase(), dx, dy + 38);
 
   dy += 88;
   ctx.fillStyle = "#0B6839";
@@ -484,21 +274,22 @@ function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
   ctx.fillText("2. ROLE / TITLE", dx, dy);
   ctx.font = "800 24px 'Space Grotesk', sans-serif";
   ctx.fillStyle = "#FF0080";
-  ctx.fillText(details.title || "BUILDER", dx, dy + 28);
+  ctx.fillText((details.title || "FULL STACK DEVELOPER").toUpperCase(), dx, dy + 28);
 
   dy += 74;
   ctx.fillStyle = "#0B6839";
   ctx.font = "800 13px 'Victor Mono', monospace";
   ctx.fillText("3. SOCIALS LINK", dx, dy);
-  ctx.font = "700 18px 'Victor Mono', monospace";
+  ctx.font = "700 17px 'Victor Mono', monospace";
   ctx.fillStyle = "#0B6839";
-  ctx.fillText(details.social || "https://x.com/yourhandle", dx, dy + 26);
+  ctx.fillText(details.social || "https://x.com/KuldeepLakhera9", dx, dy + 26);
 
   dy += 70;
   ctx.font = "800 14px 'Victor Mono', monospace";
   ctx.fillStyle = "#0B6839";
-  ctx.fillText("OCT 28–31 · 2026 · GOA, INDIA", dx, dy + 24);
+  ctx.fillText("OCT 28–31 · 2026 · GOA, INDIA · 2:47 PM STUDIO", dx, dy + 24);
 
+  // Footer Barcode + ID
   const fy = cy + ch - 60;
   drawBarcode(ctx, cx + 32, fy, 240, 38, "#0B6839");
 
@@ -507,9 +298,26 @@ function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
   ctx.textAlign = "right";
   ctx.fillText(idCode, cx + cw - 32, fy + 24);
   ctx.textAlign = "left";
+
+  // Stamp Badge
+  ctx.save();
+  ctx.translate(cx + cw - 120, fy - 68);
+  ctx.rotate(-0.2);
+  ctx.strokeStyle = "rgba(11,104,57,0.7)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(0, 0, 48, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.font = "800 11px 'Victor Mono', monospace";
+  ctx.fillStyle = "rgba(11,104,57,0.85)";
+  ctx.textAlign = "center";
+  ctx.fillText("#FrameInGoa", 0, -6);
+  ctx.fillText("VERIFIED 2026", 0, 10);
+  ctx.textAlign = "left";
+  ctx.restore();
 }
 
-// Master Renderer for Card Back (Flipped view)
+// Master Renderer for Card Back
 function renderCardBack(ctx, idCode) {
   ctx.clearRect(0, 0, CARD_W, CARD_H);
 
@@ -531,34 +339,32 @@ function renderCardBack(ctx, idCode) {
   ctx.fillStyle = "#FFFBE8";
   ctx.fill();
 
-  // Magnetic strip
-  ctx.fillStyle = "#1A1A1A";
-  ctx.fillRect(cx, cy + 50, cw, 70);
+  drawLanyardSlot(ctx, CARD_W / 2, cy + 22);
 
-  // Signature field
+  ctx.fillStyle = "#1A1A1A";
+  ctx.fillRect(cx, cy + 60, cw, 70);
+
   ctx.fillStyle = "#FFFFFF";
-  ctx.fillRect(cx + 40, cy + 160, cw - 260, 50);
+  ctx.fillRect(cx + 40, cy + 170, cw - 260, 50);
   ctx.font = "700 22px 'Caveat', cursive";
   ctx.fillStyle = "#0B6839";
-  ctx.fillText("Verified HH Goa Builder #FrameInGoa", cx + 60, cy + 192);
+  ctx.fillText("Verified HH Goa Builder #FrameInGoa", cx + 60, cy + 202);
 
-  // Security CVC code box
   ctx.fillStyle = "#EAE3CD";
-  ctx.fillRect(cx + cw - 200, cy + 160, 160, 50);
+  ctx.fillRect(cx + cw - 200, cy + 170, 160, 50);
   ctx.font = "800 18px 'Victor Mono', monospace";
   ctx.fillStyle = "#FF0080";
-  ctx.fillText("CVC 2026", cx + cw - 180, cy + 192);
+  ctx.fillText("CVC 2026", cx + cw - 180, cy + 202);
 
-  // Event info block
   ctx.fillStyle = "#0B6839";
   ctx.font = "900 28px 'Imbue', serif";
-  ctx.fillText("HACKER HOUSE GOA 2026", cx + 40, cy + 260);
+  ctx.fillText("HACKER HOUSE GOA 2026", cx + 40, cy + 270);
 
   ctx.font = "700 14px 'Victor Mono', monospace";
   ctx.fillStyle = "#000000";
-  ctx.fillText("OFFICIAL VIP CREDENTIAL · NON-TRANSFERABLE", cx + 40, cy + 290);
-  ctx.fillText("DATES: OCTOBER 28–31, 2026 · GOA, INDIA", cx + 40, cy + 315);
-  ctx.fillText("HOST: 2:47 PM STUDIO · LESS NOISE. MORE SIGNAL.", cx + 40, cy + 340);
+  ctx.fillText("OFFICIAL VIP CREDENTIAL · NON-TRANSFERABLE", cx + 40, cy + 300);
+  ctx.fillText("DATES: OCTOBER 28–31, 2026 · GOA, INDIA", cx + 40, cy + 325);
+  ctx.fillText("HOST: 2:47 PM STUDIO · LESS NOISE. MORE SIGNAL.", cx + 40, cy + 350);
 
   drawBarcode(ctx, cx + 40, cy + ch - 70, cw - 80, 40, "#0B6839");
 
@@ -570,30 +376,43 @@ function renderCardBack(ctx, idCode) {
 }
 
 export default function App() {
-  const [name, setName] = useState("");
-  const [title, setTitle] = useState("");
-  const [social, setSocial] = useState("");
+  const [name, setName] = useState("Kuldeep Lakhera");
+  const [title, setTitle] = useState("Full Stack Developer");
+  const [social, setSocial] = useState("https://x.com/KuldeepLakhera9");
   const [photoSrc, setPhotoSrc] = useState(SAMPLE_AVATARS[0].url);
   const [imgEl, setImgEl] = useState(null);
   const [frame, setFrame] = useState("frame1");
   const [filter, setFilter] = useState("normal");
-  const [viewMode, setViewMode] = useState("3d"); // '3d' | '2d'
+  const [viewMode, setViewMode] = useState("3d");
   const [isFlipped, setIsFlipped] = useState(false);
   const [idCode] = useState(randomId());
   const [zoom, setZoom] = useState(1);
   const [offsetY, setOffsetY] = useState(0);
   const [offsetX, setOffsetX] = useState(0);
   const [copied, setCopied] = useState(false);
-  const [isGenerated, setIsGenerated] = useState(true);
 
-  // 3D Tilt State
+  // 3D Lanyard Hanging Pendulum Physics State
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, px: 50, py: 50, active: false });
+  const [sway, setSway] = useState(0);
 
   const fileInputRef = useRef(null);
   const canvasRef = useRef(null);
   const liveCanvasRef = useRef(null);
 
-  // Load photo element
+  // Lanyard natural hanging pendulum oscillation loop
+  useEffect(() => {
+    let frameId;
+    let startTime = Date.now();
+    const animateSway = () => {
+      const elapsed = (Date.now() - startTime) / 1000;
+      setSway(Math.sin(elapsed * 1.8) * 1.5);
+      frameId = requestAnimationFrame(animateSway);
+    };
+    frameId = requestAnimationFrame(animateSway);
+    return () => cancelAnimationFrame(frameId);
+  }, []);
+
+  // Load photo
   useEffect(() => {
     if (!photoSrc) { setImgEl(null); return; }
     const im = new Image();
@@ -626,10 +445,7 @@ export default function App() {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
     const reader = new FileReader();
-    reader.onload = () => {
-      setPhotoSrc(reader.result);
-      setIsGenerated(true);
-    };
+    reader.onload = () => setPhotoSrc(reader.result);
     reader.readAsDataURL(f);
   };
 
@@ -638,10 +454,7 @@ export default function App() {
     const f = e.dataTransfer.files && e.dataTransfer.files[0];
     if (f) {
       const reader = new FileReader();
-      reader.onload = () => {
-        setPhotoSrc(reader.result);
-        setIsGenerated(true);
-      };
+      reader.onload = () => setPhotoSrc(reader.result);
       reader.readAsDataURL(f);
     }
   };
@@ -654,8 +467,8 @@ export default function App() {
     const y = e.clientY - rect.top;
     const px = (x / rect.width) * 100;
     const py = (y / rect.height) * 100;
-    const rx = -((y - rect.height / 2) / (rect.height / 2)) * 16;
-    const ry = ((x - rect.width / 2) / (rect.width / 2)) * 16;
+    const rx = -((y - rect.height / 2) / (rect.height / 2)) * 18;
+    const ry = ((x - rect.width / 2) / (rect.width / 2)) * 18;
     setTilt({ rx, ry, px, py, active: true });
   };
 
@@ -677,7 +490,7 @@ export default function App() {
     }
 
     const link = document.createElement("a");
-    link.download = `hh-goa-2026-pass-${(name || "builder").replace(/\s+/g, "_").toLowerCase()}.png`;
+    link.download = `hh-goa-2026-pass-${(name || "kuldeep_lakhera").replace(/\s+/g, "_").toLowerCase()}.png`;
     link.href = tempC.toDataURL("image/png");
     link.click();
   };
@@ -698,6 +511,10 @@ export default function App() {
       alert("Link copied: https://hhg-id.vercel.app");
     }
   };
+
+  // Calculate 3D Transform including pendulum sway
+  const currentRotateX = viewMode === "3d" ? (tilt.active ? tilt.rx : 0) : 0;
+  const currentRotateY = viewMode === "3d" ? (tilt.active ? tilt.ry : sway) : 0;
 
   return (
     <div style={{
@@ -771,7 +588,7 @@ export default function App() {
       `}</style>
 
       <main style={{ maxWidth: 1140, margin: "0 auto", width: "100%", flex: 1 }}>
-        {/* Header bar matching official website */}
+        {/* Header */}
         <header style={{ width: "100%", marginBottom: 20 }}>
           <div style={{
             display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -815,14 +632,14 @@ export default function App() {
             Hacker House Goa ID Card Generator
           </h1>
           <p style={{ color: "#FEE101", fontSize: 15, margin: "6px 0 0", maxWidth: 900, fontWeight: 700 }}>
-            Design your own HH Goa 2026 themed photo frame generator. Upload your photo in the control panel below, choose your frame style, and generate your shareable credential.
+            Design your official 3D Hanging Lanyard HH Goa 2026 Builder Credential. Customize your name, stack, and photo to generate your shareable badge.
           </p>
         </div>
 
         {/* Main Grid */}
         <div className="main-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28, alignItems: "start" }}>
           
-          {/* Left Column: Form Controls */}
+          {/* Left Column: Form Controls with Defaults: Kuldeep Lakhera, Full Stack Developer */}
           <div style={{
             background: "#FFFBE8", padding: 20, borderRadius: 12,
             boxShadow: "5px 5px 0px 0px #084e2a", color: "#000"
@@ -843,10 +660,10 @@ export default function App() {
                 <input
                   className="neo-input"
                   type="text"
-                  placeholder="e.g. Ravi Kishan"
+                  placeholder="e.g. Kuldeep Lakhera"
                   maxLength={30}
                   value={name}
-                  onChange={(e) => { setName(e.target.value); setIsGenerated(true); }}
+                  onChange={(e) => setName(e.target.value)}
                 />
               </div>
 
@@ -857,10 +674,10 @@ export default function App() {
                 <input
                   className="neo-input"
                   type="text"
-                  placeholder="e.g. Creative Director"
+                  placeholder="e.g. Full Stack Developer"
                   maxLength={40}
                   value={title}
-                  onChange={(e) => { setTitle(e.target.value); setIsGenerated(true); }}
+                  onChange={(e) => setTitle(e.target.value)}
                 />
               </div>
 
@@ -871,9 +688,9 @@ export default function App() {
                 <input
                   className="neo-input"
                   type="text"
-                  placeholder="e.g. https://x.com/BH4VE5H"
+                  placeholder="e.g. https://x.com/KuldeepLakhera9"
                   value={social}
-                  onChange={(e) => { setSocial(e.target.value); setIsGenerated(true); }}
+                  onChange={(e) => setSocial(e.target.value)}
                 />
               </div>
 
@@ -889,7 +706,7 @@ export default function App() {
                   onClick={() => fileInputRef.current?.click()}
                   style={{
                     border: "2px dashed #0B6839", borderRadius: 10, background: "#FFFFFF",
-                    padding: "16px", textAlign: "center", cursor: "pointer", marginBottom: 10
+                    padding: "14px", textAlign: "center", cursor: "pointer", marginBottom: 10
                   }}
                 >
                   <Upload size={20} color="#0B6839" style={{ marginBottom: 4 }} />
@@ -899,7 +716,6 @@ export default function App() {
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFile} style={{ display: "none" }} />
                 </div>
 
-                {/* Sample Avatars */}
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <span style={{ fontSize: 10, fontWeight: 800 }}>SAMPLES:</span>
                   {SAMPLE_AVATARS.map((av, i) => (
@@ -913,7 +729,6 @@ export default function App() {
                   ))}
                 </div>
 
-                {/* Zoom / Shift Sliders */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 10 }}>
                   <div>
                     <label style={{ fontSize: 9, fontWeight: 800, color: "#0B6839" }}>ZOOM ({zoom.toFixed(1)}x)</label>
@@ -971,7 +786,7 @@ export default function App() {
                   type="button"
                   className="custom-btn custom-btn-pink"
                   style={{ width: "100%", padding: "12px", fontSize: 14 }}
-                  onClick={() => setIsGenerated(true)}
+                  onClick={() => updateCanvas()}
                 >
                   GENERATE ID CARD
                 </button>
@@ -979,12 +794,12 @@ export default function App() {
             </form>
           </div>
 
-          {/* Right Column: 3D/2D Card Preview */}
+          {/* Right Column: 3D Hanging Lanyard ID Card Preview */}
           <div style={{
             background: "#FFFBE8", padding: 20, borderRadius: 12,
             boxShadow: "7px 7px 0px 0px #084e2a", color: "#000"
           }}>
-            {/* View Mode Toggle */}
+            {/* View Mode & Flip Toggle */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
               <div style={{ display: "flex", gap: 6 }}>
                 <button
@@ -993,7 +808,7 @@ export default function App() {
                   style={{ padding: "6px 14px", fontSize: 11, borderRadius: 999 }}
                   onClick={() => setViewMode("3d")}
                 >
-                  3D CARD
+                  3D HANGING CARD
                 </button>
                 <button
                   type="button"
@@ -1001,7 +816,7 @@ export default function App() {
                   style={{ padding: "6px 14px", fontSize: 11, borderRadius: 999 }}
                   onClick={() => setViewMode("2d")}
                 >
-                  2D CARD
+                  2D FLAT CARD
                 </button>
               </div>
 
@@ -1015,11 +830,50 @@ export default function App() {
               </button>
             </div>
 
-            {/* Interactive Card Canvas Window */}
+            {/* 3D Hanging Lanyard Stage Container */}
             <div style={{
-              background: "#000000", border: "2px solid #000", borderRadius: 16,
-              padding: 12, position: "relative", overflow: "hidden", minHeight: 340
+              background: "radial-gradient(circle, #154233 0%, #05130E 100%)",
+              border: "2px solid #000", borderRadius: 16,
+              padding: "50px 12px 20px", position: "relative", overflow: "hidden", minHeight: 380
             }}>
+              
+              {/* Lanyard Fabric Straps hanging from top neck anchor */}
+              <div style={{
+                position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
+                width: 140, height: 60, zIndex: 10, pointerEvents: "none"
+              }}>
+                {/* Left Strap */}
+                <div style={{
+                  position: "absolute", top: -20, left: 35, width: 24, height: 70,
+                  background: "linear-gradient(90deg, #0B6839 0%, #124e3b 50%, #0B6839 100%)",
+                  transform: "rotate(-18deg)", borderLeft: "1px solid #FEE101", borderRight: "1px solid #FEE101",
+                  boxShadow: "0 4px 8px rgba(0,0,0,0.5)"
+                }} />
+                
+                {/* Right Strap */}
+                <div style={{
+                  position: "absolute", top: -20, right: 35, width: 24, height: 70,
+                  background: "linear-gradient(90deg, #0B6839 0%, #124e3b 50%, #0B6839 100%)",
+                  transform: "rotate(18deg)", borderLeft: "1px solid #FEE101", borderRight: "1px solid #FEE101",
+                  boxShadow: "0 4px 8px rgba(0,0,0,0.5)"
+                }} />
+
+                {/* Metallic Swivel Clip Connector */}
+                <div style={{
+                  position: "absolute", bottom: 2, left: "50%", transform: "translateX(-50%)",
+                  width: 32, height: 26, background: "linear-gradient(180deg, #E2E8F0 0%, #94A3B8 100%)",
+                  borderRadius: "4px 4px 10px 10px", border: "2px solid #1E293B",
+                  boxShadow: "0 4px 8px rgba(0,0,0,0.6)"
+                }}>
+                  {/* Swivel Ring Hole */}
+                  <div style={{
+                    width: 12, height: 12, borderRadius: "50%", background: "#0F172A",
+                    margin: "5px auto 0", border: "2px solid #CBD5E1"
+                  }} />
+                </div>
+              </div>
+
+              {/* 3D Hanging Card Physics Stage */}
               <div
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
@@ -1031,24 +885,24 @@ export default function App() {
               >
                 <div style={{
                   transform: viewMode === "3d"
-                    ? `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg) scale3d(1.02, 1.02, 1.02)`
+                    ? `rotateX(${currentRotateX}deg) rotateY(${currentRotateY}deg) scale3d(1.01, 1.01, 1.01)`
                     : "none",
-                  transition: tilt.active ? "transform 0.08s ease-out" : "transform 0.5s ease-out",
+                  transition: tilt.active ? "transform 0.08s ease-out" : "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
                   position: "relative",
-                  borderRadius: 12,
+                  borderRadius: 14,
                   overflow: "hidden",
-                  boxShadow: viewMode === "3d" && tilt.active
-                    ? `0 25px 40px rgba(0,0,0,0.6), 0 0 20px rgba(255,0,128,0.3)`
+                  boxShadow: viewMode === "3d"
+                    ? `0 30px 60px rgba(0,0,0,0.7), 0 0 25px rgba(11,104,57,0.4)`
                     : "0 10px 25px rgba(0,0,0,0.4)"
                 }}>
                   <canvas ref={liveCanvasRef} style={{ width: "100%", height: "auto", display: "block" }} />
                   <canvas ref={canvasRef} style={{ display: "none" }} />
 
-                  {/* Glossy Specular Light Reflection */}
+                  {/* Specular Glossy Light Reflection */}
                   {viewMode === "3d" && tilt.active && (
                     <div style={{
                       position: "absolute", inset: 0, pointerEvents: "none",
-                      background: `radial-gradient(circle at ${tilt.px}% ${tilt.py}%, rgba(255,255,255,0.35) 0%, transparent 60%)`,
+                      background: `radial-gradient(circle at ${tilt.px}% ${tilt.py}%, rgba(255,255,255,0.38) 0%, transparent 60%)`,
                       mixBlendMode: "overlay"
                     }} />
                   )}
@@ -1109,7 +963,7 @@ export default function App() {
           </a>
         </div>
         <div style={{ color: "rgba(255,255,255,0.9)", fontWeight: 700 }}>
-          Built for <span style={{ color: "#FEE101" }}>Hacker House Goa 2026</span> · 28 – 31 OCT 2026 · Goa, India
+          Built by <span style={{ color: "#FEE101" }}>Kuldeep Lakhera</span> for <span style={{ color: "#FEE101" }}>Hacker House Goa 2026</span> · 28 – 31 OCT 2026 · Goa, India
         </div>
       </footer>
     </div>
