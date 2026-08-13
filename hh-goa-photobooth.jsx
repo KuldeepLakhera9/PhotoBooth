@@ -182,11 +182,10 @@ function drawLanyardSlot(ctx, cx, cy) {
   ctx.restore();
 }
 
-// Draw EXACT "HACKER गोवा HOUSE" Graphic from User Image
+// Draw EXACT "HACKER गोवा HOUSE" Graphic
 function drawHackerHouseGoaBanner(ctx, x, y, w, h) {
   ctx.save();
   
-  // Green Banner Container (#007238)
   drawRoundedRect(ctx, x, y, w, h, 16);
   ctx.fillStyle = "#007238";
   ctx.fill();
@@ -194,7 +193,7 @@ function drawHackerHouseGoaBanner(ctx, x, y, w, h) {
   ctx.save();
   ctx.clip();
 
-  // Draw HACKER in condensed tall yellow serif font
+  // HACKER
   ctx.save();
   ctx.translate(x + 28, y + h / 2 + 6);
   ctx.scale(0.88, 1.4);
@@ -204,7 +203,7 @@ function drawHackerHouseGoaBanner(ctx, x, y, w, h) {
   ctx.fillText("HACKER", 0, 0);
   ctx.restore();
 
-  // Draw HOUSE in condensed tall yellow serif font
+  // HOUSE
   ctx.save();
   ctx.translate(x + 475, y + h / 2 + 6);
   ctx.scale(0.88, 1.4);
@@ -214,12 +213,11 @@ function drawHackerHouseGoaBanner(ctx, x, y, w, h) {
   ctx.fillText("HOUSE", 0, 0);
   ctx.restore();
 
-  // Draw Hot Pink Devanagari "गोवा" Badge overlapping right in the middle
+  // Hot Pink Devanagari "गोवा" Badge
   ctx.save();
   ctx.translate(x + 400, y + h / 2 - 2);
   ctx.rotate(-0.06);
 
-  // Badge background (Hot pink #FF007F with yellow #FFDE00 border)
   drawRoundedRect(ctx, -55, -28, 110, 56, 16);
   ctx.fillStyle = "#FF007F";
   ctx.fill();
@@ -227,7 +225,6 @@ function drawHackerHouseGoaBanner(ctx, x, y, w, h) {
   ctx.lineWidth = 4;
   ctx.stroke();
 
-  // Devanagari text "गोवा"
   ctx.font = "900 38px 'Rozha One', 'Victor Mono', sans-serif";
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "center";
@@ -241,15 +238,13 @@ function drawHackerHouseGoaBanner(ctx, x, y, w, h) {
   ctx.restore();
 }
 
-// Master Renderer for Card Front matching EXACT user image
+// Master Renderer for Card Front
 function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
   ctx.clearRect(0, 0, CARD_W, CARD_H);
 
-  // Background matching exact HH Goa Green (#007238)
   ctx.fillStyle = "#007238";
   ctx.fillRect(0, 0, CARD_W, CARD_H);
 
-  // Card Inner Body (#FFFBE8)
   const cx = 35, cy = 35, cw = CARD_W - 70, ch = CARD_H - 70;
   drawRoundedRect(ctx, cx, cy, cw, ch, 24);
   ctx.fillStyle = "#FFFBE8";
@@ -258,15 +253,12 @@ function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
   ctx.lineWidth = 4;
   ctx.stroke();
 
-  // Top Punch Slot Hole for Lanyard Clip
   drawLanyardSlot(ctx, CARD_W / 2, cy + 22);
 
-  // Draw EXACT "HACKER गोवा HOUSE" Banner Header matching attached screenshot!
   const headerY = cy + 42;
   const headerH = 110;
   drawHackerHouseGoaBanner(ctx, cx, headerY, cw, headerH);
 
-  // Subtitle Date & Studio line underneath header
   ctx.font = "800 13px 'Victor Mono', monospace";
   ctx.fillStyle = "#007238";
   ctx.fillText("GOA, INDIA · 28 – 31 OCT 2026", cx + 24, headerY + headerH + 20);
@@ -275,7 +267,6 @@ function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
   ctx.fillText("2:47 PM STUDIO · #FrameInGoa", cx + cw - 24, headerY + headerH + 20);
   ctx.textAlign = "left";
 
-  // Photo Frame
   const px = cx + 32, py = cy + 185, pw = 270, ph = 295;
   ctx.save();
   drawRoundedRect(ctx, px - 3, py - 3, pw + 6, ph + 6, 14);
@@ -302,7 +293,6 @@ function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
 
   drawStar(ctx, px + 8, py + 12, 16, "#FFDE00", -0.2);
 
-  // Profile Details (Supports Empty State placeholders when not filled)
   const dx = px + pw + 40;
   let dy = py + 14;
 
@@ -334,7 +324,6 @@ function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
   ctx.fillStyle = "#007238";
   ctx.fillText("LESS NOISE. MORE SIGNAL.", dx, dy + 22);
 
-  // Footer Barcode + ID
   const fy = cy + ch - 56;
   drawBarcode(ctx, cx + 32, fy, 240, 36, "#007238");
 
@@ -344,7 +333,6 @@ function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
   ctx.fillText(idCode, cx + cw - 32, fy + 24);
   ctx.textAlign = "left";
 
-  // Stamp Badge (#FrameInGoa)
   ctx.save();
   ctx.translate(cx + cw - 120, fy - 64);
   ctx.rotate(-0.2);
@@ -421,7 +409,6 @@ function renderCardBack(ctx, idCode) {
 }
 
 export default function App() {
-  // Form fields start empty by default
   const [name, setName] = useState("");
   const [title, setTitle] = useState("");
   const [social, setSocial] = useState("");
@@ -437,8 +424,9 @@ export default function App() {
   const [offsetY, setOffsetY] = useState(0);
   const [offsetX, setOffsetX] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [showPasteNotice, setShowPasteNotice] = useState(false);
 
-  // 3D Lanyard Hanging Pendulum Physics State
+  // 3D Lanyard Physics State
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, px: 50, py: 50, active: false });
   const [sway, setSway] = useState(0);
 
@@ -542,11 +530,34 @@ export default function App() {
     link.click();
   };
 
-  const shareX = () => {
-    const text = encodeURIComponent(
-      `I just generated my official HH Goa 2026 Builder Pass! 🌴🪪\n\nGenerate yours: https://hhg-id.vercel.app\n\n#FrameInGoa @247pmstudio @hhgoa`
-    );
-    window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank");
+  // 1-Click Share to X with direct image file clipboard copy & notice banner
+  const shareX = async () => {
+    const c = canvasRef.current || liveCanvasRef.current;
+    if (!c) return;
+
+    const captionText = `I just generated my official HH Goa 2026 Builder Pass! 🌴🪪\n\nGenerate yours: https://hhg-id.vercel.app\n\n#FrameInGoa @247pmstudio @hhgoa`;
+
+    // 1. First trigger PNG image download so the user has the exact file ready
+    downloadPNG();
+
+    // 2. Try copying image directly to clipboard
+    try {
+      c.toBlob(async (blob) => {
+        if (blob) {
+          try {
+            await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+            setShowPasteNotice(true);
+            setTimeout(() => setShowPasteNotice(false), 10000);
+          } catch (e) {}
+        }
+        // Open X post window
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(captionText)}`;
+        window.open(twitterUrl, "_blank");
+      }, "image/png");
+    } catch (err) {
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(captionText)}`;
+      window.open(twitterUrl, "_blank");
+    }
   };
 
   const copyLink = async () => {
@@ -633,6 +644,30 @@ export default function App() {
         }
       `}</style>
 
+      {/* Floating Notice Banner for attaching generated ID card image on X */}
+      {showPasteNotice && (
+        <div style={{
+          position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
+          background: "#007238", color: "#FFFFFF", padding: "14px 20px", borderRadius: 14,
+          boxShadow: "0 15px 40px rgba(0,0,0,0.6)", border: "3px solid #FFDE00",
+          zIndex: 9999, fontSize: 13, fontWeight: 800, maxWidth: "90%", width: 620,
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12
+        }}>
+          <div>
+            📸 <b>Card Image Downloaded & Copied to Clipboard!</b><br />
+            <span style={{ color: "#FFDE00", fontWeight: 700, fontSize: 12 }}>
+              Press <b>Cmd+V</b> (or <b>Ctrl+V</b>) inside the X post box (or attach the downloaded PNG) to post your custom card!
+            </span>
+          </div>
+          <button
+            onClick={() => setShowPasteNotice(false)}
+            style={{ background: "rgba(255,255,255,0.2)", border: "none", color: "#FFF", padding: "6px", borderRadius: 6, cursor: "pointer" }}
+          >
+            <XIcon size={16} />
+          </button>
+        </div>
+      )}
+
       <main style={{ maxWidth: 1140, margin: "0 auto", width: "100%", flex: 1 }}>
         {/* Header */}
         <header style={{ width: "100%", marginBottom: 20 }}>
@@ -685,7 +720,7 @@ export default function App() {
         {/* Main Grid */}
         <div className="main-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28, alignItems: "start" }}>
           
-          {/* Left Column: Form Controls (Clean empty state) */}
+          {/* Left Column: Form Controls */}
           <div style={{
             background: "#FFFBE8", padding: 20, borderRadius: 12,
             boxShadow: "5px 5px 0px 0px #00582b", color: "#000"
@@ -845,7 +880,6 @@ export default function App() {
             background: "#FFFBE8", padding: 20, borderRadius: 12,
             boxShadow: "7px 7px 0px 0px #00582b", color: "#000"
           }}>
-            {/* View Mode & Flip Toggle */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
               <div style={{ display: "flex", gap: 6 }}>
                 <button
@@ -876,7 +910,7 @@ export default function App() {
               </button>
             </div>
 
-            {/* 3D Hanging Lanyard Stage Container */}
+            {/* 3D Stage Container */}
             <div style={{
               background: "radial-gradient(circle, #007238 0%, #003D1F 100%)",
               border: "2px solid #000", borderRadius: 16,
@@ -951,7 +985,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Export Controls */}
+            {/* Export & Share Controls */}
             <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 <button
