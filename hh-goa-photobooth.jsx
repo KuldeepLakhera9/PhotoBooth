@@ -163,7 +163,6 @@ function drawRoundedRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// Lanyard Punch Slot Hole
 function drawLanyardSlot(ctx, cx, cy) {
   ctx.save();
   ctx.beginPath();
@@ -182,7 +181,6 @@ function drawLanyardSlot(ctx, cx, cy) {
   ctx.restore();
 }
 
-// Draw EXACT "HACKER गोवा HOUSE" Graphic
 function drawHackerHouseGoaBanner(ctx, x, y, w, h) {
   ctx.save();
   
@@ -238,7 +236,6 @@ function drawHackerHouseGoaBanner(ctx, x, y, w, h) {
   ctx.restore();
 }
 
-// Master Renderer for Card Front
 function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
   ctx.clearRect(0, 0, CARD_W, CARD_H);
 
@@ -350,7 +347,6 @@ function renderCardFront(ctx, img, filterId, frameId, details, idCode) {
   ctx.restore();
 }
 
-// Master Renderer for Card Back
 function renderCardBack(ctx, idCode) {
   ctx.clearRect(0, 0, CARD_W, CARD_H);
 
@@ -424,7 +420,10 @@ export default function App() {
   const [offsetY, setOffsetY] = useState(0);
   const [offsetX, setOffsetX] = useState(0);
   const [copied, setCopied] = useState(false);
-  const [showPasteNotice, setShowPasteNotice] = useState(false);
+  
+  // Share Modal State
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [previewDataUrl, setPreviewDataUrl] = useState("");
 
   // 3D Lanyard Physics State
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, px: 50, py: 50, active: false });
@@ -494,7 +493,6 @@ export default function App() {
     }
   };
 
-  // 3D Tilt Handlers
   const handleMouseMove = (e) => {
     if (viewMode !== "3d") return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -530,34 +528,37 @@ export default function App() {
     link.click();
   };
 
-  // 1-Click Share to X with direct image file clipboard copy & notice banner
-  const shareX = async () => {
+  // Open Share Modal and prepare PNG & clipboard
+  const prepareShare = async () => {
     const c = canvasRef.current || liveCanvasRef.current;
     if (!c) return;
 
-    const captionText = `I just generated my official HH Goa 2026 Builder Pass! 🌴🪪\n\nGenerate yours: https://photobooth.kuldeeplakhera.me/\n\n#FrameInGoa @247pmstudio @hhgoa`;
+    // Generate hires data URL for preview
+    const dataUrl = c.toDataURL("image/png");
+    setPreviewDataUrl(dataUrl);
 
-    // 1. First trigger PNG image download so the user has the exact file ready
+    // Auto download PNG for user
     downloadPNG();
 
-    // 2. Try copying image directly to clipboard
+    // Auto copy PNG image to clipboard
     try {
       c.toBlob(async (blob) => {
         if (blob) {
           try {
             await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-            setShowPasteNotice(true);
-            setTimeout(() => setShowPasteNotice(false), 10000);
           } catch (e) {}
         }
-        // Open X post window
-        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(captionText)}`;
-        window.open(twitterUrl, "_blank");
       }, "image/png");
-    } catch (err) {
-      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(captionText)}`;
-      window.open(twitterUrl, "_blank");
-    }
+    } catch (e) {}
+
+    setShowShareModal(true);
+  };
+
+  const openXWithPost = () => {
+    const captionText = `I just generated my official HH Goa 2026 Builder Pass! 🌴🪪\n\nGenerate yours: https://photobooth.kuldeeplakhera.me/\n\n#FrameInGoa @247pmstudio @hhgoa`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(captionText)}`;
+    window.open(twitterUrl, "_blank");
+    setShowShareModal(false);
   };
 
   const copyLink = async () => {
@@ -644,27 +645,78 @@ export default function App() {
         }
       `}</style>
 
-      {/* Floating Notice Banner for attaching generated ID card image on X */}
-      {showPasteNotice && (
+      {/* Share Modal Dialog */}
+      {showShareModal && (
         <div style={{
-          position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
-          background: "#007238", color: "#FFFFFF", padding: "14px 20px", borderRadius: 14,
-          boxShadow: "0 15px 40px rgba(0,0,0,0.6)", border: "3px solid #FFDE00",
-          zIndex: 9999, fontSize: 13, fontWeight: 800, maxWidth: "90%", width: 620,
-          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12
+          position: "fixed", inset: 0, zIndex: 99999,
+          background: "rgba(0, 0, 0, 0.85)", backdropFilter: "blur(8px)",
+          display: "flex", alignItems: "center", justifyContent: "center", padding: 16
         }}>
-          <div>
-            📸 <b>Card Image Downloaded & Copied to Clipboard!</b><br />
-            <span style={{ color: "#FFDE00", fontWeight: 700, fontSize: 12 }}>
-              Press <b>Cmd+V</b> (or <b>Ctrl+V</b>) inside the X post box (or attach the downloaded PNG) to post your custom card!
-            </span>
+          <div style={{
+            background: "#FFFBE8", border: "3px solid #000", borderRadius: 20,
+            boxShadow: "10px 10px 0px 0px #FF007F", padding: 24, maxWidth: 520, width: "100%",
+            textAlign: "center", color: "#000", position: "relative"
+          }}>
+            <button
+              onClick={() => setShowShareModal(false)}
+              style={{
+                position: "absolute", top: 16, right: 16, background: "#000", color: "#FFF",
+                border: "none", borderRadius: 8, padding: 6, cursor: "pointer"
+              }}
+            >
+              <XIcon size={18} />
+            </button>
+
+            <h2 style={{
+              fontFamily: "'Imbue', serif", fontSize: 32, fontWeight: 900,
+              color: "#007238", margin: "0 0 10px", textTransform: "uppercase"
+            }}>
+              YOUR ID CARD IS READY TO POST! 🌴
+            </h2>
+
+            {/* Generated Card Preview */}
+            {previewDataUrl && (
+              <div style={{
+                borderRadius: 12, overflow: "hidden", border: "2px solid #007238",
+                marginBottom: 16, boxShadow: "0 8px 20px rgba(0,0,0,0.2)"
+              }}>
+                <img src={previewDataUrl} alt="HH Goa 2026 Builder Pass" style={{ width: "100%", height: "auto", display: "block" }} />
+              </div>
+            )}
+
+            <div style={{
+              background: "#007238", color: "#FFFFFF", padding: "12px 16px",
+              borderRadius: 12, marginBottom: 16, textAlign: "left", fontSize: 13, fontWeight: 700
+            }}>
+              <div style={{ color: "#FFDE00", fontWeight: 900, marginBottom: 4 }}>
+                ✅ 2 EASY STEPS TO ATTACH YOUR CARD ON X:
+              </div>
+              <ol style={{ margin: 0, paddingLeft: 20, lineHeight: 1.6 }}>
+                <li>Click <b>"OPEN X & PASTE IMAGE"</b> below</li>
+                <li>Press <b>Cmd+V</b> (or <b>Ctrl+V</b>) inside the X composer window (or attach the downloaded PNG file)!</li>
+              </ol>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <button
+                type="button"
+                className="custom-btn custom-btn-pink"
+                style={{ padding: "14px", fontSize: 15 }}
+                onClick={openXWithPost}
+              >
+                <Share2 size={18} style={{ marginRight: 8 }} /> OPEN X & PASTE IMAGE
+              </button>
+
+              <button
+                type="button"
+                className="custom-btn custom-btn-outline-pink"
+                style={{ padding: "10px", fontSize: 12 }}
+                onClick={() => setShowShareModal(false)}
+              >
+                CLOSE
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => setShowPasteNotice(false)}
-            style={{ background: "rgba(255,255,255,0.2)", border: "none", color: "#FFF", padding: "6px", borderRadius: 6, cursor: "pointer" }}
-          >
-            <XIcon size={16} />
-          </button>
         </div>
       )}
 
@@ -875,7 +927,7 @@ export default function App() {
             </form>
           </div>
 
-          {/* Right Column: 3D Hanging Lanyard Stage */}
+          {/* Right Column: 3D Stage */}
           <div style={{
             background: "#FFFBE8", padding: 20, borderRadius: 12,
             boxShadow: "7px 7px 0px 0px #00582b", color: "#000"
@@ -1000,7 +1052,7 @@ export default function App() {
                   type="button"
                   className="custom-btn custom-btn-pink"
                   style={{ padding: "10px", fontSize: 11 }}
-                  onClick={shareX}
+                  onClick={prepareShare}
                 >
                   <Share2 size={14} style={{ marginRight: 6 }} /> SHARE ON X
                 </button>
