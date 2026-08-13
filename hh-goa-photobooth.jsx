@@ -706,7 +706,7 @@ export default function App() {
                 <input
                   className="neo-input"
                   type="text"
-                  placeholder="e.g. Ravi Kishan"
+                  placeholder="e.g. Kuldeep Lakhera"
                   maxLength={30}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -720,7 +720,7 @@ export default function App() {
                 <input
                   className="neo-input"
                   type="text"
-                  placeholder="e.g. Creative Director"
+                  placeholder="e.g. Fullstack Developer"
                   maxLength={40}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -734,7 +734,7 @@ export default function App() {
                 <input
                   className="neo-input"
                   type="text"
-                  placeholder="e.g. https://x.com/BH4VE5H"
+                  placeholder="e.g. https://x.com/KuldeepLakhera9"
                   value={social}
                   onChange={(e) => setSocial(e.target.value)}
                 />
